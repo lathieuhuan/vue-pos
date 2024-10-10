@@ -1,85 +1,69 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
+import { computed } from 'vue'
+import { useOrdersStore } from './stores/orders'
+
+const { orders, activeOrderId, addOrder, removeOrder, selectOrder } = useOrdersStore()
+
+const menuItems = computed(() => {
+  console.log(activeOrderId)
+  const activeIndex = orders.findIndex((order) => order.id === 'XYZ')
+  const [activeLeftIndex, activeRightIndex] = [activeIndex - 1, activeIndex + 1]
+
+  const items = orders.map((order, index) => ({
+    id: order.id,
+    label: `Order ${order.id}`,
+    isActive: index === activeIndex,
+    isLeftOfActive: index === activeLeftIndex,
+    isRightOfActive: index === activeRightIndex,
+  }))
+
+  return items
+})
+
+const onClickRemoveOrder = (e: MouseEvent, orderId: string) => {
+  e.stopPropagation()
+  removeOrder(orderId)
+}
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+  <div class="h-96 bg-gray-400">
+    <div class="relative">
+      <div class="absolute top-0 left-0 w-full h-full grid grid-rows-2">
+        <div class="bg-gray-200"></div>
+        <div class="bg-white"></div>
+      </div>
+      <div class="pb-2 bg-white">
+        <div class="relative z-10 pt-1.5 bg-transparent flex gap-1.5">
+          <div v-for="item in menuItems" :key="item.id" class="pb-1.5">
+            <div
+              :class="{
+                'bg-white rounded-lg': item.isActive,
+                'bg-gray-200 ring-[6px] ring-gray-200': !item.isActive,
+                'rounded-br-lg': item.isLeftOfActive,
+                'rounded-bl-lg': item.isRightOfActive,
+              }"
+            >
+              <div
+                :class="[
+                  'px-3 py-1 rounded-lg flex gap-2 items-center cursor-default',
+                  !item.isActive && 'hover:bg-gray-300',
+                ]"
+                @click="selectOrder(item.id)"
+              >
+                <span>{{ item.label }}</span>
+                <button @click="(e) => onClickRemoveOrder(e, item.id)">
+                  <span class="pi pi-times text-sm text-gray-500"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  </header>
-
-  <RouterView />
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
-}
-</style>
+<style scoped></style>
