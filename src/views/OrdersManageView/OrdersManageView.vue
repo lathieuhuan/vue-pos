@@ -16,43 +16,7 @@ const menuItems = computed(() => {
 });
 
 const addOrder = () => {
-  orderStore.addOrder({
-    items: [
-      {
-        product: {
-          id: '123',
-          code: '1000023324',
-          name: 'Product 123',
-          price: 10000,
-          unit: 'TUBE',
-        },
-        quantity: 2,
-        status: 'SUCCESS',
-      },
-      {
-        product: {
-          id: '456',
-          // code: '1000027592',
-          name: 'Product 456',
-          price: 350000,
-          unit: 'KG',
-        },
-        quantity: 1,
-        status: 'ERROR',
-      },
-      {
-        product: {
-          id: '789',
-          code: '1000027592',
-          name: 'Product 789',
-          price: 2000,
-          unit: 'KG',
-        },
-        quantity: 12,
-        status: 'LOADING',
-      },
-    ],
-  });
+  orderStore.addOrder();
 };
 </script>
 
@@ -69,9 +33,13 @@ const addOrder = () => {
 
     <div class="p-4 flex gap-4">
       <div class="grow">
-        <OrderCart v-if="orderStore.activeOrder" :items="orderStore.activeOrder.items" />
+        <OrderCart
+          v-if="orderStore.activeOrder"
+          :items="orderStore.activeOrder.items"
+          @addItem="orderStore.addProduct"
+        />
       </div>
-      <div style="width: 25rem; min-width: 20rem; max-width: 30%;">
+      <div style="width: 25rem; min-width: 20rem; max-width: 30%">
         <OrderAssistant />
       </div>
     </div>

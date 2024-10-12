@@ -45,12 +45,12 @@ const data = computed(() => {
 </script>
 
 <template>
-  <div class="pb-2 bg-white">
-    <div class="flex bg-gray-200">
+  <div class="pb-2 bg-surface-0">
+    <div class="flex bg-surface-200">
       <div class="relative">
         <div class="absolute top-0 left-0 w-full h-full grid grid-rows-2">
           <div></div>
-          <div class="bg-white"></div>
+          <div class="bg-surface-0"></div>
         </div>
         <div class="relative z-10 pt-1.5 bg-transparent flex gap-1.5">
           <TabItem
@@ -65,7 +65,7 @@ const data = computed(() => {
               <button
                 :class="[
                   'p-1 rounded-full flex',
-                  item.isActive ? 'hover:bg-gray-200' : 'hover:bg-gray-400',
+                  item.isActive ? 'hover:bg-surface-200' : 'hover:bg-surface-400',
                 ]"
                 @click="
                   (e) => {
