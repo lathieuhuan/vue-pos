@@ -1,5 +1,5 @@
 import type { StaffModel } from './common.types';
 
-export type UserProfileModel = {
+export type AccountModel = {
   staff: StaffModel;
 };

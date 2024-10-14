@@ -1,8 +1,12 @@
 import { ref, computed, reactive } from 'vue';
 import { defineStore } from 'pinia';
 import type { OrderItemModel, OrderModel } from '@/types/order.types';
+import { formatDate } from '@/utils';
+import { useAccountStore } from './account.store';
+import { EOrderStatus } from '@/constants/enums';
 
 export const useOrdersStore = defineStore('orders', () => {
+  const accountStore = useAccountStore();
   const orders = reactive<OrderModel[]>([]);
   const activeId = ref('ABC');
 
@@ -25,6 +29,10 @@ export const useOrdersStore = defineStore('orders', () => {
     }
 
     const newOrder: OrderModel = {
+      status: EOrderStatus.PROCESSING,
+      handler: accountStore.account.staff,
+      customer: null,
+      createdAt: formatDate(new Date()),
       items: [],
       ...orderInit,
       id: orderInit?.id || crypto.randomUUID(),

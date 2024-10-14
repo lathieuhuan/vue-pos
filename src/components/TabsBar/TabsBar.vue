@@ -61,7 +61,7 @@ const data = computed(() => {
             @click="$emit('changeActiveKey', item.key)"
           >
             <template v-slot:item>
-              <span>{{ item.label }}</span>
+              <span class="font-medium">{{ item.label }}</span>
               <button
                 :class="[
                   'p-1 rounded-full flex',
@@ -74,7 +74,7 @@ const data = computed(() => {
                   }
                 "
               >
-                <span class="pi pi-times" style="font-size: 12px"></span>
+                <span class="pi pi-times text-xs"></span>
               </button>
             </template>
           </TabItem>
@@ -86,7 +86,7 @@ const data = computed(() => {
             @click="$emit('addItem')"
           >
             <template #item>
-              <span v-if="allowAdd" class="pi pi-plus" style="font-size: 14px"></span>
+              <span v-if="allowAdd" class="pi pi-plus text-sm"></span>
               <div v-else class="h-3.5"></div>
             </template>
           </TabItem>

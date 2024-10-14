@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import Popover, { type PopoverMethods } from 'primevue/popover';
+import Menu, { type MenuMethods } from 'primevue/menu';
+import Image from 'primevue/image';
 import Skeleton from 'primevue/skeleton';
 
 import type { OrderItemModel, ProductModel } from '@/types/order.types';
@@ -8,6 +10,8 @@ import { formatNumber } from '@/utils';
 import { useProductsSearcher } from '@/hooks/useProductsSearcher';
 
 const MIN_VALID_KEYWORD = 1;
+
+type MenuEndState = 'INVALID' | 'EMPTY' | 'LOADING' | 'NONE' | 'FETCH_MORE';
 
 defineProps<{
   items: OrderItemModel[];
@@ -21,6 +25,8 @@ let timeoutId: number;
 const { data, searchProducts } = useProductsSearcher();
 const keyword = ref('');
 const popover = ref<PopoverMethods>();
+const menu = ref<MenuMethods>();
+const input = ref<HTMLInputElement>();
 
 const onInputKeyword = (e: Event) => {
   keyword.value = (e.target as HTMLInputElement).value.trim();
@@ -35,48 +41,66 @@ const onInputKeyword = (e: Event) => {
     }, 150);
   }
 };
+
+const menuEndState = computed<MenuEndState>(() => {
+  if (keyword.value.length < MIN_VALID_KEYWORD) {
+    return 'INVALID';
+  }
+  if (data.loading) {
+    return 'LOADING';
+  }
+  // if (canFetchMore) {
+  //   return "FETCH_MORE"
+  // }
+  if (!data.products.length) {
+    return 'EMPTY';
+  }
+  return 'NONE';
+});
 </script>
 
 <template>
-  <div class="text-sm">
+  <div>
     <div>
-      <div class="search-input w-64 overflow-hidden relative flex items-center">
+      <div
+        class="search-input w-64 overflow-hidden relative flex items-center shadow"
+        @click="menu?.show"
+      >
         <span class="pi pi-search absolute left-2"></span>
         <input
+          ref="input"
           class="w-full px-8 py-1.5 outline-none bg-transparent relative z-10"
           placeholder="Search products"
           @input="onInputKeyword"
-          @click="popover?.show"
         />
         <span v-if="data.loading" class="pi pi-spin pi-spinner absolute right-2"></span>
       </div>
 
-      <Popover
-        ref="popover"
+      <Menu
+        ref="menu"
+        :model="data.products"
+        :popup="true"
         :dt="{
-          'content.padding': '0.5rem',
+          'list.padding': '0.5rem',
+          'item.padding': '0.5rem',
         }"
+        :pt="{
+          list: {
+            class: 'shrink-on-empty',
+            style: { width: '24rem', maxWidth: '24rem' },
+          },
+        }"
+        @focus="input?.focus()"
       >
-        <div class="text-sm" style="width: 20rem; max-width: 20rem">
-          <div v-if="data.loading" class="space-y-1">
-            <Skeleton height="3.25rem" />
-            <Skeleton height="3.25rem" />
-          </div>
-
-          <p v-else-if="keyword.length < MIN_VALID_KEYWORD" class="py-4 text-center font-semibold">
-            Enter atleast {{ MIN_VALID_KEYWORD }} characters to search
-          </p>
-          <p v-else-if="!data.products.length" class="py-4 text-center font-semibold">
-            No products found
-          </p>
-
-          <div v-else class="space-y-1">
+        <template #item="{ item: product, props }">
+          <div class="flex gap-2" @click="$emit('addItem', product)" v-bind="props.action">
             <div
-              v-for="product in data.products"
-              :key="product.id"
-              class="px-2 py-1.5 rounded hover:bg-primary-100"
-              @click="$emit('addItem', product)"
+              class="h-12 aspect-square bg-surface-200 rounded-sm flex justify-center items-center"
             >
+              <Image v-if="product.imageUrl" :src="product.imageUrl" />
+              <span v-else class="text-2xl opacity-70">{{ product.name.charAt(0) }}</span>
+            </div>
+            <div class="grow">
               <div class="flex justify-between">
                 <span class="font-semibold">{{ product.name }}</span>
                 <span>{{ formatNumber(product.price) }}</span>
@@ -87,12 +111,79 @@ const onInputKeyword = (e: Event) => {
               </div>
             </div>
           </div>
+        </template>
+
+        <!-- <template #end v-if="menuEndState !== 'NONE'">
+          <div class="py-4 flex justify-center items-center font-semibold">
+            <span v-if="menuEndState === 'INVALID'">
+              Enter atleast {{ MIN_VALID_KEYWORD }} characters to search
+            </span>
+            <span v-else-if="menuEndState === 'EMPTY'">No products found</span>
+            <span v-else-if="menuEndState === 'LOADING'">Loading...</span>
+          </div>
+        </template> -->
+
+        <template #end>
+          <div class="py-4 flex justify-center items-center font-semibold">
+            <span>Loading...</span>
+          </div>
+        </template>
+      </Menu>
+
+      <Popover
+        ref="popover"
+        :dt="{
+          'content.padding': '0.5rem',
+        }"
+      >
+        <div style="width: 24rem; max-width: 24rem">
+          <div v-if="data.loading" class="divide-y divide-surface-300">
+            <div class="p-2">
+              <Skeleton height="3rem" />
+            </div>
+            <div class="p-2">
+              <Skeleton height="3rem" />
+            </div>
+          </div>
+
+          <p v-else-if="keyword.length < MIN_VALID_KEYWORD" class="py-4 text-center font-semibold">
+            Enter atleast {{ MIN_VALID_KEYWORD }} characters to search
+          </p>
+          <p v-else-if="!data.products.length" class="py-4 text-center font-semibold">
+            No products found
+          </p>
+
+          <div v-else class="divide-y divide-surface-300">
+            <div
+              v-for="product in data.products"
+              :key="product.id"
+              class="p-2 rounded flex gap-2 hover:bg-primary-300"
+              @click="$emit('addItem', product)"
+            >
+              <div
+                class="h-12 aspect-square bg-surface-200 rounded-sm flex justify-center items-center"
+              >
+                <Image v-if="product.imageUrl" :src="product.imageUrl" />
+                <span v-else class="text-2xl opacity-70">{{ product.name.charAt(0) }}</span>
+              </div>
+              <div class="grow">
+                <div class="flex justify-between">
+                  <span class="font-semibold">{{ product.name }}</span>
+                  <span>{{ formatNumber(product.price) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="opacity-70">{{ product.code }}</span>
+                  <span>{{ product.unit }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </Popover>
     </div>
 
     <div
-      class="mt-4 grid product-template-columns py-1 font-semibold opacity-70 rounded-full border border-surface-300 hover:border-surface-400"
+      class="mt-4 grid product-template-columns py-2 font-semibold opacity-70 rounded-full border border-surface-500"
     >
       <div></div>
       <div>{{ 'Product Name' }}</div>
@@ -107,7 +198,7 @@ const onInputKeyword = (e: Event) => {
       <div
         v-for="(item, index) in items"
         :key="item.product.id"
-        class="grid product-template-columns with-divider py-2 rounded-lg border border-surface-300 hover:border-surface-400 group"
+        class="grid product-template-columns with-divider py-2 rounded-md border border-surface-300 hover:border-surface-400 shadow group"
         style="min-height: 3.625rem"
       >
         <div class="no-divider">
@@ -144,10 +235,8 @@ const onInputKeyword = (e: Event) => {
   transition:
     background var(--p-form-field-transition-duration),
     color var(--p-form-field-transition-duration),
-    border-color var(--p-form-field-transition-duration),
-    box-shadow var(--p-form-field-transition-duration);
+    border-color var(--p-form-field-transition-duration);
   border-radius: var(--p-form-field-border-radius);
-  box-shadow: var(--p-form-field-shadow);
 }
 .search-input:hover {
   border-color: var(--p-form-field-hover-border-color);

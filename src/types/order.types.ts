@@ -1,4 +1,5 @@
-// import type { CustomerModel, StaffModel } from './common.types';
+import type { EOrderStatus } from '@/constants/enums';
+import type { CustomerModel, StaffModel } from './common.types';
 
 export type ProductModel = {
   id: string;
@@ -6,6 +7,7 @@ export type ProductModel = {
   name: string;
   unit: string;
   price: number;
+  imageUrl?: string;
 };
 
 export type OrderItemModel = {
@@ -16,8 +18,10 @@ export type OrderItemModel = {
 
 export type OrderModel = {
   id: string;
+  status: EOrderStatus;
   name: string;
   items: OrderItemModel[];
-  // handler: StaffModel;
-  // customer: CustomerModel;
+  handler: StaffModel;
+  customer: CustomerModel | null;
+  createdAt: string;
 };

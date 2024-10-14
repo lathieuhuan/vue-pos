@@ -16,6 +16,26 @@ const Theme = definePreset(Aura, {
       900: '{amber.900}',
       950: '{amber.950}',
     },
+    colorScheme: {
+      light: {
+        'list.option.focusBackground': '{amber.300}',
+        'navigation.item.focusBackground': '{amber.300}',
+      },
+    },
+  },
+  components: {
+    tag: {
+      'font.size': '0.875rem',
+      'rounded.border.radius': '999px',
+      padding: '0.125rem 0.75rem',
+    },
+    select: {
+      padding: {
+        x: '0.75rem',
+        y: '0.375rem',
+      },
+      'option.padding': '0.375rem 0.75rem',
+    },
   },
 });
 
