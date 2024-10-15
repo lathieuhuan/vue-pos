@@ -5,7 +5,7 @@ const products: ProductModel[] = [
     id: '1',
     name: 'Bàn chải đánh răng Colgate',
     code: '100000293424',
-    price: 12000,
+    price: 15000,
     unit: 'Cái',
   },
   {
@@ -30,10 +30,10 @@ const products: ProductModel[] = [
   },
   {
     id: '4',
-    name: 'Dao chém gió',
+    name: 'Nước uống sữa chua Nutriboost việt quất',
     code: '200000410842',
-    price: 34000,
-    unit: 'Cái',
+    price: 11000,
+    unit: 'Chai',
   },
 ];
 

@@ -12,11 +12,14 @@ export function useProductsSearcher() {
     loading: false,
     products: [],
   });
+  let timeoutId: number;
 
   const searchProducts = async (keyword: string) => {
     data.loading = true;
 
-    setTimeout(() => {
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
       const filteredProducts = products.filter((product) =>
         product.name.toLowerCase().includes(keyword),
       );

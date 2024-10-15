@@ -1,185 +1,26 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import Popover, { type PopoverMethods } from 'primevue/popover';
-import Menu, { type MenuMethods } from 'primevue/menu';
-import Image from 'primevue/image';
-import Skeleton from 'primevue/skeleton';
+import type { DeepReadonly } from 'vue';
+import Button from 'primevue/button';
 
 import type { OrderItemModel, ProductModel } from '@/types/order.types';
 import { formatNumber } from '@/utils';
-import { useProductsSearcher } from '@/hooks/useProductsSearcher';
-
-const MIN_VALID_KEYWORD = 1;
-
-type MenuEndState = 'INVALID' | 'EMPTY' | 'LOADING' | 'NONE' | 'FETCH_MORE';
+import { EOrderItemStatus } from '@/constants/enums';
+import ProductSearch from './ProductSearch.vue';
 
 defineProps<{
-  items: OrderItemModel[];
+  items: DeepReadonly<OrderItemModel[]>;
 }>();
 
 defineEmits<{
   (e: 'addItem', product: ProductModel): void;
+  (e: 'removeItem', productId: string): void;
 }>();
-
-let timeoutId: number;
-const { data, searchProducts } = useProductsSearcher();
-const keyword = ref('');
-const popover = ref<PopoverMethods>();
-const menu = ref<MenuMethods>();
-const input = ref<HTMLInputElement>();
-
-const onInputKeyword = (e: Event) => {
-  keyword.value = (e.target as HTMLInputElement).value.trim();
-
-  clearTimeout(timeoutId);
-
-  if (keyword.value.length >= MIN_VALID_KEYWORD) {
-    data.loading = true;
-
-    timeoutId = setTimeout(() => {
-      searchProducts(keyword.value.toLowerCase());
-    }, 150);
-  }
-};
-
-const menuEndState = computed<MenuEndState>(() => {
-  if (keyword.value.length < MIN_VALID_KEYWORD) {
-    return 'INVALID';
-  }
-  if (data.loading) {
-    return 'LOADING';
-  }
-  // if (canFetchMore) {
-  //   return "FETCH_MORE"
-  // }
-  if (!data.products.length) {
-    return 'EMPTY';
-  }
-  return 'NONE';
-});
 </script>
 
 <template>
   <div>
     <div>
-      <div
-        class="search-input w-64 overflow-hidden relative flex items-center shadow"
-        @click="menu?.show"
-      >
-        <span class="pi pi-search absolute left-2"></span>
-        <input
-          ref="input"
-          class="w-full px-8 py-1.5 outline-none bg-transparent relative z-10"
-          placeholder="Search products"
-          @input="onInputKeyword"
-        />
-        <span v-if="data.loading" class="pi pi-spin pi-spinner absolute right-2"></span>
-      </div>
-
-      <Menu
-        ref="menu"
-        :model="data.products"
-        :popup="true"
-        :dt="{
-          'list.padding': '0.5rem',
-          'item.padding': '0.5rem',
-        }"
-        :pt="{
-          list: {
-            class: 'shrink-on-empty',
-            style: { width: '24rem', maxWidth: '24rem' },
-          },
-        }"
-        @focus="input?.focus()"
-      >
-        <template #item="{ item: product, props }">
-          <div class="flex gap-2" @click="$emit('addItem', product)" v-bind="props.action">
-            <div
-              class="h-12 aspect-square bg-surface-200 rounded-sm flex justify-center items-center"
-            >
-              <Image v-if="product.imageUrl" :src="product.imageUrl" />
-              <span v-else class="text-2xl opacity-70">{{ product.name.charAt(0) }}</span>
-            </div>
-            <div class="grow">
-              <div class="flex justify-between">
-                <span class="font-semibold">{{ product.name }}</span>
-                <span>{{ formatNumber(product.price) }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="opacity-70">{{ product.code }}</span>
-                <span>{{ product.unit }}</span>
-              </div>
-            </div>
-          </div>
-        </template>
-
-        <!-- <template #end v-if="menuEndState !== 'NONE'">
-          <div class="py-4 flex justify-center items-center font-semibold">
-            <span v-if="menuEndState === 'INVALID'">
-              Enter atleast {{ MIN_VALID_KEYWORD }} characters to search
-            </span>
-            <span v-else-if="menuEndState === 'EMPTY'">No products found</span>
-            <span v-else-if="menuEndState === 'LOADING'">Loading...</span>
-          </div>
-        </template> -->
-
-        <template #end>
-          <div class="py-4 flex justify-center items-center font-semibold">
-            <span>Loading...</span>
-          </div>
-        </template>
-      </Menu>
-
-      <Popover
-        ref="popover"
-        :dt="{
-          'content.padding': '0.5rem',
-        }"
-      >
-        <div style="width: 24rem; max-width: 24rem">
-          <div v-if="data.loading" class="divide-y divide-surface-300">
-            <div class="p-2">
-              <Skeleton height="3rem" />
-            </div>
-            <div class="p-2">
-              <Skeleton height="3rem" />
-            </div>
-          </div>
-
-          <p v-else-if="keyword.length < MIN_VALID_KEYWORD" class="py-4 text-center font-semibold">
-            Enter atleast {{ MIN_VALID_KEYWORD }} characters to search
-          </p>
-          <p v-else-if="!data.products.length" class="py-4 text-center font-semibold">
-            No products found
-          </p>
-
-          <div v-else class="divide-y divide-surface-300">
-            <div
-              v-for="product in data.products"
-              :key="product.id"
-              class="p-2 rounded flex gap-2 hover:bg-primary-300"
-              @click="$emit('addItem', product)"
-            >
-              <div
-                class="h-12 aspect-square bg-surface-200 rounded-sm flex justify-center items-center"
-              >
-                <Image v-if="product.imageUrl" :src="product.imageUrl" />
-                <span v-else class="text-2xl opacity-70">{{ product.name.charAt(0) }}</span>
-              </div>
-              <div class="grow">
-                <div class="flex justify-between">
-                  <span class="font-semibold">{{ product.name }}</span>
-                  <span>{{ formatNumber(product.price) }}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="opacity-70">{{ product.code }}</span>
-                  <span>{{ product.unit }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Popover>
+      <ProductSearch @selectProduct="(product) => $emit('addItem', product)" />
     </div>
 
     <div
@@ -204,9 +45,30 @@ const menuEndState = computed<MenuEndState>(() => {
         <div class="no-divider">
           <p class="pr-3 text-right">{{ index + 1 }}</p>
         </div>
-        <div>
-          <p class="font-semibold">{{ item.product.name }}</p>
-          <p class="opacity-70">{{ item.product.code }}</p>
+        <div class="pr-3 flex justify-between">
+          <div>
+            <p class="pr-2 font-semibold">{{ item.product.name }}</p>
+            <p class="opacity-70">{{ item.product.code }}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span
+              v-if="item.status === EOrderItemStatus.LOADING"
+              class="pi pi-spinner pi-spin opacity-70"
+            />
+            <span
+              v-if="item.status === EOrderItemStatus.ERROR"
+              class="pi pi-exclamation-circle"
+              style="color: var(--p-orange-500)"
+            />
+            <Button
+              class="p-2"
+              severity="danger"
+              text
+              @click="$emit('removeItem', item.product.id)"
+            >
+              <span class="pi pi-trash"></span>
+            </Button>
+          </div>
         </div>
         <div class="px-2 text-right">{{ formatNumber(item.quantity) }}</div>
         <div class="px-2 text-center">{{ item.product.unit }}</div>
@@ -217,7 +79,7 @@ const menuEndState = computed<MenuEndState>(() => {
         <div class="no-divider flex items-center opacity-70">
           <div class="w-8">
             <button
-              class="w-full aspect-square rounded hover:bg-surface-300 hidden group-hover:flex justify-center items-center"
+              class="w-full aspect-square rounded hover:bg-surface-300 hidden group-hover:flex-center"
             >
               <span class="pi pi-ellipsis-h"></span>
             </button>
@@ -229,29 +91,6 @@ const menuEndState = computed<MenuEndState>(() => {
 </template>
 
 <style scoped>
-.search-input {
-  color: var(--p-form-field-color);
-  border: 1px solid var(--p-form-field-border-color);
-  transition:
-    background var(--p-form-field-transition-duration),
-    color var(--p-form-field-transition-duration),
-    border-color var(--p-form-field-transition-duration);
-  border-radius: var(--p-form-field-border-radius);
-}
-.search-input:hover {
-  border-color: var(--p-form-field-hover-border-color);
-}
-.search-input:focus-within {
-  border-color: var(--p-form-field-focus-border-color);
-}
-.search-input > span {
-  color: var(--p-form-field-border-color);
-}
-.search-input:hover > span,
-.search-input:focus-within > span {
-  color: var(--p-form-field-hover-border-color);
-}
-
 .product-template-columns {
   grid-template-columns: 2.625rem 1fr 5rem 5.5rem 6rem 6.5rem min-content;
 }

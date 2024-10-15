@@ -5,7 +5,7 @@ type ListItem = {
   value: string;
 };
 
-export const PAYMENT_METHODS: ListItem[] = [
+export const PAYMENT_METHODS = [
   {
     label: 'Cash',
     value: EPaymentMethod.CASH,
@@ -14,4 +14,4 @@ export const PAYMENT_METHODS: ListItem[] = [
     label: 'Bank Transfer',
     value: EPaymentMethod.BANK_TRANSFER,
   },
-];
+] satisfies ListItem[];

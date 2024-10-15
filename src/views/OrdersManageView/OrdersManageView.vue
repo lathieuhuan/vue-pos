@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+
 import { useOrdersStore } from '@/stores/orders.store';
 import TabsBar, { type TabsBarProps } from '@/components/TabsBar/TabsBar.vue';
 import OrderCart from './OrderCart.vue';
@@ -34,10 +35,15 @@ const menuItems = computed(() => {
           v-if="ordersStore.activeOrder"
           :items="ordersStore.activeOrder.items"
           @addItem="ordersStore.addProduct"
+          @removeItem="ordersStore.removeProduct"
         />
       </div>
       <div style="width: 28rem; min-width: 20rem; max-width: 30%">
-        <OrderAssistant v-if="ordersStore.activeOrder" :order="ordersStore.activeOrder" />
+        <OrderAssistant
+          v-if="ordersStore.activeOrder"
+          :order="ordersStore.activeOrder"
+          @updateOrder="ordersStore.updateOrder"
+        />
       </div>
     </div>
   </div>

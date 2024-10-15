@@ -30,6 +30,13 @@ export default {
         800: 'var(--p-primary-800)',
         900: 'var(--p-primary-900)',
       },
+      borderRadius: {
+        xs: 'var(--p-border-radius-xs)',
+        sm: 'var(--p-border-radius-sm)',
+        DEFAULT: 'var(--p-border-radius-md)',
+        lg: 'var(--p-border-radius-lg)',
+        xl: 'var(--p-border-radius-xl)',
+      },
     },
     extend: {},
   },

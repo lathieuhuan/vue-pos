@@ -1,4 +1,4 @@
-import type { EOrderStatus } from '@/constants/enums';
+import type { EOrderItemStatus, EOrderStatus, EPaymentMethod } from '@/constants/enums';
 import type { CustomerModel, StaffModel } from './common.types';
 
 export type ProductModel = {
@@ -11,9 +11,13 @@ export type ProductModel = {
 };
 
 export type OrderItemModel = {
-  status: 'SUCCESS' | 'ERROR' | 'LOADING';
+  status: EOrderItemStatus;
   product: ProductModel;
   quantity: number;
+};
+
+export type OrderPaymentInfo = {
+  paymentMethod: EPaymentMethod;
 };
 
 export type OrderModel = {
@@ -24,4 +28,5 @@ export type OrderModel = {
   handler: StaffModel;
   customer: CustomerModel | null;
   createdAt: string;
+  paymentInfo: OrderPaymentInfo;
 };

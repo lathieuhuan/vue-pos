@@ -1,15 +1,24 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import Select from 'primevue/select';
+import { computed, ref, type DeepReadonly } from 'vue';
+import Button from 'primevue/button';
+import Tag from 'primevue/tag';
 
-import type { OrderModel } from '@/types/order.types';
+import type { OrderModel, OrderPaymentInfo } from '@/types/order.types';
+import type { EPaymentMethod } from '@/constants/enums';
 import { formatNumber } from '@/utils';
-import OrderStatusTag from '@/components/tags/OrderStatusTag.vue';
 import { PAYMENT_METHODS } from '@/constants/lists';
+import OrderStatusTag from '@/components/tags/OrderStatusTag.vue';
+import InputNumber from 'primevue/inputnumber';
 
 const props = defineProps<{
-  order: OrderModel;
+  order: DeepReadonly<OrderModel>;
 }>();
+
+const emit = defineEmits<{
+  (e: 'updateOrder', data: Partial<OrderModel>): void;
+}>();
+
+const customerPay = ref<number>();
 
 const calculated = computed(() => {
   const { order } = props;
@@ -22,13 +31,22 @@ const calculated = computed(() => {
     totalOrderAmount: totalAmountOfItems,
   };
 });
+
+const onSelectPaymentMethod = (method: EPaymentMethod) => {
+  const newPaymentInfo: OrderPaymentInfo = {
+    ...props.order.paymentInfo,
+    paymentMethod: method,
+  };
+
+  emit('updateOrder', { paymentInfo: newPaymentInfo });
+};
 </script>
 
 <template>
   <div class="rounded-md border border-surface-300 overflow-hidden">
     <div class="pl-4 pr-3 py-1 bg-surface-200 flex justify-between items-center">
       <p class="pr-2 truncate font-semibold" :title="`#${order.id}`">#{{ order.id }}</p>
-      <button class="w-7 h-7 flex justify-center items-center group" title="See detail">
+      <button class="w-7 h-7 flex-center group" title="See detail">
         <span
           class="rounded-full opacity-60 group-hover:bg-primary-300 group-hover:opacity-100 flex"
         >
@@ -37,7 +55,7 @@ const calculated = computed(() => {
       </button>
     </div>
 
-    <div class="px-4 relative">
+    <div class="px-4 grow relative">
       <OrderStatusTag class="absolute top-3 right-4" :value="order.status" />
 
       <div class="py-3 space-y-1 relative">
@@ -67,18 +85,32 @@ const calculated = computed(() => {
         </div>
       </div>
 
-      <div class="py-3 border-t border-surface-200 space-y-1">
-        <p class="font-semibold">Payment Info</p>
-        <div class="flex gap-2">
-          <label>Method</label>
-          <Select
-            :options="PAYMENT_METHODS"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Select"
-          ></Select>
+      <div class="py-3 border-t border-surface-200 space-y-2">
+        <p class="text-base font-semibold">Payment Info</p>
+        <div>
+          <div>
+            <label>Payment Method</label>
+          </div>
+          <div class="mt-1 flex flex-wrap gap-2">
+            <Tag
+              v-for="method in PAYMENT_METHODS"
+              class="cursor-pointer"
+              :key="method.value"
+              :value="method.label"
+              :severity="order.paymentInfo.paymentMethod === method.value ? 'primary' : 'secondary'"
+              @click="onSelectPaymentMethod(method.value)"
+            />
+          </div>
+        </div>
+        <div>
+          <label>Customer pay</label>
+          <InputNumber v-model="customerPay" />
         </div>
       </div>
+    </div>
+
+    <div class="pt-2 pb-4 px-4">
+      <Button class="font-medium" fluid>Checkout</Button>
     </div>
   </div>
 </template>
