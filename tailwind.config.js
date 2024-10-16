@@ -38,7 +38,11 @@ export default {
         xl: 'var(--p-border-radius-xl)',
       },
     },
-    extend: {},
+    extend: {
+      content: {
+        pseudo: "''",
+      },
+    },
   },
   plugins: [],
 };

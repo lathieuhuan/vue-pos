@@ -1,26 +1,45 @@
 <script setup lang="ts">
-import type { DeepReadonly } from 'vue';
+import { nextTick, type DeepReadonly } from 'vue';
 import Button from 'primevue/button';
 
-import type { OrderItemModel, ProductModel } from '@/types/order.types';
+import type { OrderItemModel } from '@/types/order.types';
 import { formatNumber } from '@/utils';
 import { EOrderItemStatus } from '@/constants/enums';
+import { useOrdersStore } from '@/stores/orders.store';
+
+// Component
+import InputNumber from '@/components/InputNumber/InputNumber.vue';
 import ProductSearch from './ProductSearch.vue';
+
+const MAX_ITEM_QUANTITY = 99_999;
+const MIN_ITEM_QUANTITY = 0;
 
 defineProps<{
   items: DeepReadonly<OrderItemModel[]>;
 }>();
 
-defineEmits<{
-  (e: 'addItem', product: ProductModel): void;
-  (e: 'removeItem', productId: string): void;
-}>();
+const ordersStore = useOrdersStore();
+
+const onChangeItemQuantity = (item: OrderItemModel, quantity: number) => {
+  if (
+    quantity >= MIN_ITEM_QUANTITY &&
+    quantity <= MAX_ITEM_QUANTITY &&
+    quantity !== item.quantity
+  ) {
+    ordersStore.updateOrderItemQuantity(item.product.id, quantity);
+  }
+};
+
+const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputElement) => {
+  await nextTick();
+  onChangeItemQuantity(item, +inputElmt.value.replace(/,/g, ''));
+};
 </script>
 
 <template>
   <div>
     <div>
-      <ProductSearch @selectProduct="(product) => $emit('addItem', product)" />
+      <ProductSearch @selectProduct="(product) => ordersStore.addOrderItem(product)" />
     </div>
 
     <div
@@ -28,10 +47,10 @@ defineEmits<{
     >
       <div></div>
       <div>{{ 'Product Name' }}</div>
-      <div class="text-center">{{ 'Unit' }}</div>
-      <div class="text-center">{{ 'Quantity' }}</div>
-      <div class="text-center">{{ 'Price' }}</div>
-      <div class="text-center">{{ 'Total Amount' }}</div>
+      <div class="justify-center">{{ 'Quantity' }}</div>
+      <div class="justify-center">{{ 'Unit' }}</div>
+      <div class="justify-center">{{ 'Price' }}</div>
+      <div class="justify-center">{{ 'Total Amount' }}</div>
       <div><div class="w-8" /></div>
     </div>
 
@@ -39,14 +58,14 @@ defineEmits<{
       <div
         v-for="(item, index) in items"
         :key="item.product.id"
-        class="grid product-template-columns with-divider py-2 rounded-md border border-surface-300 hover:border-surface-400 shadow group"
+        class="grid product-template-columns with-divider py-2 rounded-md border border-surface-300 shadow group focus-within:border-primary-400 focus-within:shadow-primary-200"
         style="min-height: 3.625rem"
       >
-        <div class="no-divider">
-          <p class="pr-3 text-right">{{ index + 1 }}</p>
+        <div class="pr-3 justify-end no-divider">
+          <p class="h-full">{{ index + 1 }}</p>
         </div>
         <div class="pr-3 flex justify-between">
-          <div>
+          <div class="h-full">
             <p class="pr-2 font-semibold">{{ item.product.name }}</p>
             <p class="opacity-70">{{ item.product.code }}</p>
           </div>
@@ -60,29 +79,49 @@ defineEmits<{
               class="pi pi-exclamation-circle"
               style="color: var(--p-orange-500)"
             />
-            <Button
-              class="p-2"
-              severity="danger"
-              text
-              @click="$emit('removeItem', item.product.id)"
-            >
+            <Button class="p-2" severity="danger" text @click="ordersStore.removeOrderItem(item)">
               <span class="pi pi-trash"></span>
             </Button>
           </div>
         </div>
-        <div class="px-2 text-right">{{ formatNumber(item.quantity) }}</div>
-        <div class="px-2 text-center">{{ item.product.unit }}</div>
-        <div class="px-3 text-right">{{ formatNumber(item.product.price) }}</div>
-        <div class="px-3 text-right no-divider">
-          {{ formatNumber(item.product.price * item.quantity) }}
+        <div class="px-2 flex items-center gap-2">
+          <Button
+            class="w-7 h-7"
+            severity="secondary"
+            @click="onChangeItemQuantity(item, item.quantity - 1)"
+          >
+            <span class="pi pi-minus text-sm"></span>
+          </Button>
+          <InputNumber
+            class="font-medium"
+            :modelValue="item.quantity"
+            :max="MAX_ITEM_QUANTITY"
+            :min="MIN_ITEM_QUANTITY"
+            :allowEmpty="false"
+            @input="onChangeItemQuantity(item, $event.value)"
+            @blur="onBlurQuantityInput(item, $event.originalEvent.target)"
+          />
+          <Button
+            class="w-7 h-7"
+            severity="secondary"
+            @click="onChangeItemQuantity(item, item.quantity + 1)"
+          >
+            <span class="pi pi-plus text-sm"></span>
+          </Button>
+        </div>
+        <div class="px-2 justify-center">{{ item.product.unit }}</div>
+        <div class="px-3 justify-end">{{ formatNumber(item.product.price) }}</div>
+        <div class="px-3 justify-end no-divider">
+          <span class="truncate">{{ formatNumber(item.product.price * item.quantity) }} </span>
         </div>
         <div class="no-divider flex items-center opacity-70">
           <div class="w-8">
-            <button
-              class="w-full aspect-square rounded hover:bg-surface-300 hidden group-hover:flex-center"
+            <Button
+              class="w-full aspect-square hidden group-hover:flex-center group-focus-within:flex-center"
+              severity="secondary"
             >
               <span class="pi pi-ellipsis-h"></span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -92,7 +131,10 @@ defineEmits<{
 
 <style scoped>
 .product-template-columns {
-  grid-template-columns: 2.625rem 1fr 5rem 5.5rem 6rem 6.5rem min-content;
+  grid-template-columns: 2.625rem 1fr 8.75rem 5.5rem 6rem 7.25rem min-content;
+}
+.product-template-columns > div {
+  @apply flex items-center;
 }
 .product-template-columns > div:first-child {
   padding-left: 0.5rem;
@@ -104,12 +146,7 @@ defineEmits<{
   position: relative;
 }
 .with-divider > div::after {
-  content: '';
-  height: 50%;
-  position: absolute;
-  right: 0;
-  top: 0;
-  border-right: 1px solid theme('colors.surface.200');
+  @apply h-1/2 absolute right-0 top-1/2 -translate-y-1/2 border-r border-surface-200 content-pseudo;
 }
 div.no-divider::after {
   content: none;

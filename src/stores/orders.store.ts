@@ -4,6 +4,7 @@ import type { OrderItemModel, OrderModel, OrderPaymentInfo } from '@/types/order
 import { formatDate } from '@/utils';
 import { useAccountStore } from './account.store';
 import { EOrderItemStatus, EOrderStatus, EPaymentMethod } from '@/constants/enums';
+import { BaseApiService } from '@/services/base-api-service';
 
 export const useOrdersStore = defineStore('orders', () => {
   const accountStore = useAccountStore();
@@ -53,28 +54,36 @@ export const useOrdersStore = defineStore('orders', () => {
     if (alsoSelect) activeId.value = newOrder.id;
   }
 
-  function removeOrder(orderId: string) {
-    orders.splice(0, orders.length, ...orders.filter((order) => order.id !== orderId));
+  function removeOrder(removedOrder: OrderModel) {
+    orders.splice(0, orders.length, ...orders.filter((order) => order.id !== removedOrder.id));
   }
 
-  function selectOrder(id: string) {
-    activeId.value = id;
+  function selectOrder(selectedOrder: OrderModel) {
+    activeId.value = selectedOrder.id;
   }
 
   const getTargetOrder = (orderId?: string, callback?: (order: OrderModel) => void) => {
-    const order = orderId ? orders.find((order) => order.id === orderId) : activeOrder.value;
-    if (order) callback?.(order);
-    return order;
+    const targetOrder = orderId ? orders.find((order) => order.id === orderId) : activeOrder.value;
+    if (targetOrder) callback?.(targetOrder);
+    return targetOrder;
   };
+
+  const getTargetItem =
+    (productId: string, callback?: (item: OrderItemModel, order: OrderModel) => void) =>
+    (order: OrderModel) => {
+      const targetItem = order.items.find((item) => item.product.id === productId);
+      if (targetItem) callback?.(targetItem, order);
+      return targetItem;
+    };
 
   function updateOrder(data: Partial<Pick<OrderModel, 'paymentInfo'>>, orderId?: string) {
     getTargetOrder(orderId, (order) => Object.assign(order, data));
   }
 
-  function addProduct(product: OrderItemModel['product'], orderId?: string) {
+  function addOrderItem(product: OrderItemModel['product'], orderId?: string) {
     getTargetOrder(orderId, (targetOrder) => {
-      const targetItem = targetOrder.items.find((item) => item.product.id === product.id);
-      let timeout: number;
+      const targetItem = getTargetItem(product.id)(targetOrder);
+      let timeoutId: number;
 
       clearTimeout(timeoutProductUpdateMap.get(product.id));
 
@@ -82,7 +91,7 @@ export const useOrdersStore = defineStore('orders', () => {
         targetItem.quantity += 1;
         targetItem.status = EOrderItemStatus.LOADING;
 
-        timeout = setTimeout(() => {
+        timeoutId = setTimeout(() => {
           targetItem.status = EOrderItemStatus.SUCCESS;
         }, 500);
       } else {
@@ -94,31 +103,48 @@ export const useOrdersStore = defineStore('orders', () => {
 
         const item = targetOrder.items[targetOrder.items.length - 1];
 
-        timeout = setTimeout(() => {
+        timeoutId = setTimeout(() => {
           item.status = EOrderItemStatus.SUCCESS;
         }, 500);
       }
-      timeoutProductUpdateMap.set(product.id, timeout);
+      timeoutProductUpdateMap.set(product.id, timeoutId);
     });
   }
 
-  function removeProduct(productId: string, orderId?: string) {
-    getTargetOrder(orderId, (order) => {
-      const targetItem = order.items.find((item) => item.product.id === productId);
-
-      if (targetItem) {
+  function updateOrderItemQuantity(productId: string, newQuantity: number, orderId?: string) {
+    getTargetOrder(
+      orderId,
+      getTargetItem(productId, (targetItem) => {
         clearTimeout(timeoutProductUpdateMap.get(productId));
+
+        targetItem.quantity = newQuantity;
+        targetItem.status = EOrderItemStatus.LOADING;
+
+        const timeoutId = setTimeout(() => {
+          targetItem.status = EOrderItemStatus.SUCCESS;
+        }, 500);
+
+        timeoutProductUpdateMap.set(productId, timeoutId);
+      }),
+    );
+  }
+
+  function removeOrderItem({ product }: OrderItemModel, orderId?: string) {
+    getTargetOrder(
+      orderId,
+      getTargetItem(product.id, (targetItem, order) => {
+        clearTimeout(timeoutProductUpdateMap.get(product.id));
 
         if (targetItem.status !== EOrderItemStatus.ERROR) {
           targetItem.status = EOrderItemStatus.LOADING;
         }
 
         const timeout = setTimeout(() => {
-          order.items = order.items.filter((item) => item.product.id !== productId);
+          order.items = order.items.filter((item) => item.product.id !== product.id);
         }, 500);
-        timeoutProductUpdateMap.set(productId, timeout);
-      }
-    });
+        timeoutProductUpdateMap.set(product.id, timeout);
+      }),
+    );
   }
 
   return {
@@ -129,7 +155,8 @@ export const useOrdersStore = defineStore('orders', () => {
     removeOrder,
     selectOrder,
     updateOrder,
-    addProduct,
-    removeProduct,
+    addOrderItem,
+    updateOrderItemQuantity,
+    removeOrderItem,
   };
 });

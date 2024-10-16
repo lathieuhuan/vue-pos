@@ -101,12 +101,8 @@ const onSelectProduct = (product: ProductModel) => {
       'list.padding': '0.5rem',
       'item.padding': '0.5rem',
     }"
-    :pt="{
-      list: {
-        class: 'shrink-on-empty',
-        style: { width: '25rem', maxWidth: '25rem' },
-      },
-    }"
+    pt:list:class="shrink-on-empty"
+    pt:list:style="width: 25rem; max-width: 25rem;"
     @focus="inputRef?.focus()"
   >
     <template
