@@ -1,14 +1,12 @@
-export class BaseApiService {
-  constructor(
-    public baseUrl: string,
-    public headers?: Record<string, unknown>,
-  ) {}
+import type { AxiosRequestConfig } from 'axios';
+import { BaseHttp } from './base-http';
 
-  get = (url: string, params?: any) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ a: 1 });
-      }, 500);
-    });
+const baseHttp = new BaseHttp('/api');
+
+export class BaseApiService {
+  constructor(private baseURL = '') {}
+
+  get = (url: string, params?: AxiosRequestConfig) => {
+    return baseHttp.get(`${this.baseURL}${url}`, params);
   };
 }

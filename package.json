@@ -15,6 +15,7 @@
   "dependencies": {
     "@primevue/themes": "4.1.0",
     "@tanstack/vue-query": "5.59.10",
+    "axios": "1.7.7",
     "pinia": "2.1.7",
     "primeicons": "7.0.0",
     "primevue": "4.1.0",

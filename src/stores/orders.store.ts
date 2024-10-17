@@ -6,7 +6,34 @@ import { useAccountStore } from './account.store';
 import { EOrderItemStatus, EOrderStatus, EPaymentMethod } from '@/constants/enums';
 import { BaseApiService } from '@/services/base-api-service';
 
+class Chaining<T> {
+  constructor(private value: T | undefined) {}
+
+  then = <K>(onSuccess: (value: T) => K, onError?: () => void) => {
+    if (this.value) {
+      return new Chaining(onSuccess(this.value));
+    }
+    onError?.();
+    return undefined;
+  };
+
+  pipe = <K>(callback: (value: T) => K | Chaining<K>) => {
+    if (this.value) {
+      const converted = callback(this.value);
+      return new Chaining(converted instanceof Chaining ? converted.value : converted);
+    }
+    return undefined;
+  };
+}
+
+const getOrderItem = (productId: string) => (order: OrderModel) => {
+  const item = order.items.find((item) => item.product.id === productId);
+  return new Chaining(item ? { order, item } : undefined);
+};
+
 export const useOrdersStore = defineStore('orders', () => {
+  const apiService = new BaseApiService('/orders');
+
   const accountStore = useAccountStore();
   const orders = reactive<OrderModel[]>([]);
   const activeId = ref('ABC');
@@ -62,89 +89,81 @@ export const useOrdersStore = defineStore('orders', () => {
     activeId.value = selectedOrder.id;
   }
 
-  const getTargetOrder = (orderId?: string, callback?: (order: OrderModel) => void) => {
-    const targetOrder = orderId ? orders.find((order) => order.id === orderId) : activeOrder.value;
-    if (targetOrder) callback?.(targetOrder);
-    return targetOrder;
+  const getOrder = (orderId?: string) => {
+    const order = orderId ? orders.find((order) => order.id === orderId) : activeOrder.value;
+    return new Chaining<OrderModel>(order);
   };
 
-  const getTargetItem =
-    (productId: string, callback?: (item: OrderItemModel, order: OrderModel) => void) =>
-    (order: OrderModel) => {
-      const targetItem = order.items.find((item) => item.product.id === productId);
-      if (targetItem) callback?.(targetItem, order);
-      return targetItem;
-    };
-
   function updateOrder(data: Partial<Pick<OrderModel, 'paymentInfo'>>, orderId?: string) {
-    getTargetOrder(orderId, (order) => Object.assign(order, data));
+    getOrder(orderId).then((order) => Object.assign(order, data));
   }
 
   function addOrderItem(product: OrderItemModel['product'], orderId?: string) {
-    getTargetOrder(orderId, (targetOrder) => {
-      const targetItem = getTargetItem(product.id)(targetOrder);
-      let timeoutId: number;
+    getOrder(orderId).then((order) => {
+      let timeoutId: number | undefined;
 
       clearTimeout(timeoutProductUpdateMap.get(product.id));
 
-      if (targetItem) {
-        targetItem.quantity += 1;
-        targetItem.status = EOrderItemStatus.LOADING;
+      getOrderItem(product.id)(order).then(
+        ({ item }) => {
+          item.quantity += 1;
+          item.status = EOrderItemStatus.LOADING;
 
-        timeoutId = setTimeout(() => {
-          targetItem.status = EOrderItemStatus.SUCCESS;
-        }, 500);
-      } else {
-        targetOrder.items.push({
-          quantity: 1,
-          status: EOrderItemStatus.LOADING,
-          product,
-        });
+          timeoutId = setTimeout(() => {
+            item.status = EOrderItemStatus.SUCCESS;
+          }, 500);
+        },
+        () => {
+          order.items.push({
+            quantity: 1,
+            status: EOrderItemStatus.LOADING,
+            product,
+          });
 
-        const item = targetOrder.items[targetOrder.items.length - 1];
+          const item = order.items[order.items.length - 1];
 
-        timeoutId = setTimeout(() => {
-          item.status = EOrderItemStatus.SUCCESS;
-        }, 500);
-      }
-      timeoutProductUpdateMap.set(product.id, timeoutId);
+          timeoutId = setTimeout(() => {
+            item.status = EOrderItemStatus.SUCCESS;
+          }, 500);
+        },
+      );
+
+      if (timeoutId !== undefined) timeoutProductUpdateMap.set(product.id, timeoutId);
     });
   }
 
   function updateOrderItemQuantity(productId: string, newQuantity: number, orderId?: string) {
-    getTargetOrder(
-      orderId,
-      getTargetItem(productId, (targetItem) => {
+    getOrder(orderId)
+      .pipe(getOrderItem(productId))
+      ?.then(({ item }) => {
         clearTimeout(timeoutProductUpdateMap.get(productId));
 
-        targetItem.quantity = newQuantity;
-        targetItem.status = EOrderItemStatus.LOADING;
+        item.quantity = newQuantity;
+        item.status = EOrderItemStatus.LOADING;
 
         const timeoutId = setTimeout(() => {
-          targetItem.status = EOrderItemStatus.SUCCESS;
+          item.status = EOrderItemStatus.SUCCESS;
         }, 500);
 
         timeoutProductUpdateMap.set(productId, timeoutId);
-      }),
-    );
+      });
   }
 
   function removeOrderItem({ product }: OrderItemModel, orderId?: string) {
-    getTargetOrder(
-      orderId,
-      getTargetItem(product.id, (targetItem, order) => {
+    getOrder(orderId)
+      .pipe(getOrderItem(product.id))
+      ?.then(({ item, order }) => {
         clearTimeout(timeoutProductUpdateMap.get(product.id));
 
-        if (targetItem.status !== EOrderItemStatus.ERROR) {
-          targetItem.status = EOrderItemStatus.LOADING;
+        if (item.status !== EOrderItemStatus.ERROR) {
+          item.status = EOrderItemStatus.LOADING;
         }
 
         const timeout = setTimeout(() => {
           order.items = order.items.filter((item) => item.product.id !== product.id);
         }, 500);
         timeoutProductUpdateMap.set(product.id, timeout);
-      }),
-    );
+      });
   }
 
   return {
