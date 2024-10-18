@@ -1,5 +1,6 @@
 export enum EOrderStatus {
   PROCESSING = 'PROCESSING',
+  SUCCESS = 'SUCCESS',
 }
 
 export enum EPaymentMethod {

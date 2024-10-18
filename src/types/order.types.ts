@@ -23,7 +23,6 @@ export type OrderPaymentInfo = {
 export type OrderModel = {
   id: string;
   status: EOrderStatus;
-  name: string;
   items: OrderItemModel[];
   handler: StaffModel;
   customer: CustomerModel | null;

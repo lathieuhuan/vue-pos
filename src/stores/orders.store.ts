@@ -42,43 +42,43 @@ export const useOrdersStore = defineStore('orders', () => {
   const activeOrder = computed(() => orders.find((order) => order.id === activeId.value));
 
   function addOrder(orderInit?: Partial<OrderModel>, alsoSelect = true) {
-    let name = orderInit?.name;
+    // let name = orderInit?.name;
 
-    if (!name) {
-      const takenNums = new Set<number>([0]);
+    // if (!name) {
+    //   const takenNums = new Set<number>([0]);
 
-      for (const order of orders) {
-        const [, orderNum] = order.name.split(' ');
+    //   for (const order of orders) {
+    //     const [, orderNum] = order.name.split(' ');
 
-        if (!isNaN(+orderNum)) {
-          takenNums.add(+orderNum);
-        }
-      }
-      name = `Order ${Math.max(...takenNums) + 1}`;
-    }
+    //     if (!isNaN(+orderNum)) {
+    //       takenNums.add(+orderNum);
+    //     }
+    //   }
+    //   name = `Order ${Math.max(...takenNums) + 1}`;
+    // }
 
-    const defaultPaymentInfo: OrderPaymentInfo = {
-      paymentMethod: EPaymentMethod.CASH,
-    };
+    // const defaultPaymentInfo: OrderPaymentInfo = {
+    //   paymentMethod: EPaymentMethod.CASH,
+    // };
 
-    const newOrder: OrderModel = {
-      status: EOrderStatus.PROCESSING,
-      handler: accountStore.account.staff,
-      customer: null,
-      createdAt: formatDate(new Date()),
-      items: [],
-      ...orderInit,
-      id: orderInit?.id || crypto.randomUUID(),
-      name,
-      paymentInfo: {
-        ...defaultPaymentInfo,
-        ...orderInit?.paymentInfo,
-      },
-    };
+    // const newOrder: OrderModel = {
+    //   status: EOrderStatus.PROCESSING,
+    //   handler: accountStore.account.staff,
+    //   customer: null,
+    //   createdAt: formatDate(new Date()),
+    //   items: [],
+    //   ...orderInit,
+    //   id: orderInit?.id || crypto.randomUUID(),
+    //   name,
+    //   paymentInfo: {
+    //     ...defaultPaymentInfo,
+    //     ...orderInit?.paymentInfo,
+    //   },
+    // };
 
-    orders.push(newOrder);
+    // orders.push(newOrder);
 
-    if (alsoSelect) activeId.value = newOrder.id;
+    // if (alsoSelect) activeId.value = newOrder.id;
   }
 
   function removeOrder(removedOrder: OrderModel) {

@@ -32,20 +32,13 @@ function settle(
   }
 }
 
-function getMockData(path?: string) {
-  return path ? mockApi[path.slice(1)] : null;
-}
-
 function mockAdapter(config: InternalAxiosRequestConfig): AxiosPromise {
-  return new Promise(function (resolve, reject) {
-    const mockData = getMockData(config.url);
+  return new Promise((resolve, reject) => {
     const response: AxiosResponse = {
-      data: mockData,
-      status: mockData ? 200 : 404,
-      statusText: mockData ? 'OK' : 'Not Found',
       headers: {},
       config: config,
       request: {},
+      ...mockApi(config.url, config.method),
     };
     settle(resolve, reject, response);
   });
@@ -65,7 +58,11 @@ export class BaseHttp {
     });
   }
 
-  get = (url: string, params?: AxiosRequestConfig) => {
+  get = (url = '', params?: AxiosRequestConfig) => {
     return this.http.get(url, params);
+  };
+
+  post = (url = '', data: any, params?: AxiosRequestConfig) => {
+    return this.http.post(url, data, params);
   };
 }
