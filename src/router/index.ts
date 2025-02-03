@@ -1,18 +1,18 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
+import { createRouter, createWebHistory } from "vue-router";
+import HomeView from "../views/ViewHome/ViewHome.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      name: 'home',
+      path: "/",
+      name: "home",
       component: HomeView,
     },
     {
-      path: '/orders-management',
-      name: 'orders-management',
-      component: () => import('../views/OrdersManageView/OrdersManageView.vue'),
+      path: "/orders-management",
+      name: "orders-management",
+      component: () => import("../views/ViewOrderManager/ViewOrderManager.vue"),
     },
   ],
 });

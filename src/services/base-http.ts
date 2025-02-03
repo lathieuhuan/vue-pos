@@ -7,7 +7,7 @@ import type {
   CreateAxiosDefaults,
   InternalAxiosRequestConfig,
 } from 'axios';
-import mockApi from '@/mockApi';
+// import mockApi from '@/mockBackend/mockApi';
 
 function settle(
   resolve: (value: AxiosResponse | PromiseLike<AxiosResponse>) => void,
@@ -32,17 +32,17 @@ function settle(
   }
 }
 
-function mockAdapter(config: InternalAxiosRequestConfig): AxiosPromise {
-  return new Promise((resolve, reject) => {
-    const response: AxiosResponse = {
-      headers: {},
-      config: config,
-      request: {},
-      ...mockApi(config.url, config.method),
-    };
-    settle(resolve, reject, response);
-  });
-}
+// function mockAdapter(config: InternalAxiosRequestConfig): AxiosPromise {
+//   return new Promise((resolve, reject) => {
+//     const response: AxiosResponse = {
+//       headers: {},
+//       config: config,
+//       request: {},
+//       ...mockApi(config.url, config.method),
+//     };
+//     settle(resolve, reject, response);
+//   });
+// }
 
 export class BaseHttp {
   protected http: AxiosInstance;
@@ -54,7 +54,7 @@ export class BaseHttp {
         'Content-Type': 'application/json',
         ...headers,
       },
-      adapter: mockAdapter,
+      // adapter: mockAdapter,
     });
   }
 

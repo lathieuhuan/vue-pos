@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from "vue";
 
-import type { OrderModel } from '@/types/order.types';
-import { useOrdersStore } from '@/stores/orders.store';
-import TabsBar, { type TabBarItem } from '@/components/TabsBar/TabsBar.vue';
-import OrderCart from './OrderCart.vue';
-import OrderAssistant from './OrderAssistant.vue';
+import type { OrderModel } from "@/types/order.types";
+import { useOrdersStore } from "@/stores/orders.store";
+import TabsBar, { type TabBarItem } from "@/components/TabsBar/TabsBar.vue";
+import OrderCart from "./OrderCart.vue";
+import OrderAssistant from "./OrderAssistant.vue";
 
 type OrderTabItem = TabBarItem & {
   order: OrderModel;
