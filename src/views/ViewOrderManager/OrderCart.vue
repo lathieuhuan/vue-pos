@@ -2,7 +2,7 @@
 import { nextTick, type DeepReadonly } from 'vue';
 import Button from 'primevue/button';
 
-import type { OrderItemModel } from '@/types/order.types';
+import type { OrderItemModel } from '@/models/order.model';
 import { formatNumber } from '@/utils';
 import { EOrderItemStatus } from '@/constants/enums';
 import { useOrdersStore } from '@/stores/orders.store';

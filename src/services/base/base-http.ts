@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 import type {
   AxiosInstance,
   AxiosPromise,
@@ -6,7 +6,7 @@ import type {
   AxiosResponse,
   CreateAxiosDefaults,
   InternalAxiosRequestConfig,
-} from 'axios';
+} from "axios";
 // import mockApi from '@/mockBackend/mockApi';
 
 function settle(
@@ -20,7 +20,7 @@ function settle(
   } else {
     reject(
       new axios.AxiosError(
-        'Request failed with status code ' + response.status,
+        "Request failed with status code " + response.status,
         [axios.AxiosError.ERR_BAD_REQUEST, axios.AxiosError.ERR_BAD_RESPONSE][
           Math.floor(response.status / 100) - 4
         ],
@@ -47,22 +47,22 @@ function settle(
 export class BaseHttp {
   protected http: AxiosInstance;
 
-  constructor(baseURL: string, headers?: CreateAxiosDefaults['headers']) {
+  constructor(baseURL: string, headers?: CreateAxiosDefaults["headers"]) {
     this.http = axios.create({
       baseURL,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...headers,
       },
       // adapter: mockAdapter,
     });
   }
 
-  get = (url = '', params?: AxiosRequestConfig) => {
+  get = (url = "", params?: AxiosRequestConfig) => {
     return this.http.get(url, params);
   };
 
-  post = (url = '', data: any, params?: AxiosRequestConfig) => {
+  post = (url = "", data: any, params?: AxiosRequestConfig) => {
     return this.http.post(url, data, params);
   };
 }

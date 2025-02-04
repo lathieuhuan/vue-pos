@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import Menu, { type MenuMethods } from 'primevue/menu';
 import Image from 'primevue/image';
 
-import type { ProductModel } from '@/types/order.types';
+import type { ProductModel } from '@/models/product.model';
 import { useProductsSearcher } from '@/hooks/useProductsSearcher';
 import { formatNumber } from '@/utils';
 

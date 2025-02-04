@@ -1,14 +1,7 @@
-import type { EOrderItemStatus, EOrderStatus, EPaymentMethod } from '@/constants/enums';
-import type { CustomerModel, StaffModel } from './common.types';
-
-export type ProductModel = {
-  id: string;
-  code?: string;
-  name: string;
-  unit: string;
-  price: number;
-  imageUrl?: string;
-};
+import type { EOrderItemStatus, EOrderStatus, EPaymentMethod } from "@/constants/enums";
+import type { CustomerModel } from "./customer.model";
+import type { StaffModel } from "./staff.model";
+import type { ProductModel } from "./product.model";
 
 export type OrderItemModel = {
   status: EOrderItemStatus;

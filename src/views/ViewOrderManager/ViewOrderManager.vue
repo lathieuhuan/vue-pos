@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import type { OrderModel } from "@/types/order.types";
+import type { OrderModel } from "@/models/order.model";
 import { useOrdersStore } from "@/stores/orders.store";
 import TabsBar, { type TabBarItem } from "@/components/TabsBar/TabsBar.vue";
 import OrderCart from "./OrderCart.vue";
@@ -30,7 +30,7 @@ const menuItems = computed(() => {
       :activeKey="ordersStore.activeOrderId"
       :items="menuItems"
       allowAdd
-      @addTab="ordersStore.addOrder"
+      @addTab="ordersStore.addNewOrder"
       @changeActiveTab="ordersStore.selectOrder($event.order)"
       @removeTab="ordersStore.removeOrder($event.order)"
     />

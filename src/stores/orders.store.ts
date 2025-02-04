@@ -1,10 +1,10 @@
-import { ref, computed, reactive, type DeepReadonly } from 'vue';
-import { defineStore } from 'pinia';
-import type { OrderItemModel, OrderModel, OrderPaymentInfo } from '@/types/order.types';
-import { formatDate } from '@/utils';
-import { useAccountStore } from './account.store';
-import { EOrderItemStatus, EOrderStatus, EPaymentMethod } from '@/constants/enums';
-import { BaseApiService } from '@/services/base-api-service';
+import { ref, computed, reactive, type DeepReadonly } from "vue";
+import { defineStore } from "pinia";
+import type { OrderItemModel, OrderModel, OrderPaymentInfo } from "@/models/order.model";
+import { formatDate } from "@/utils";
+import { useAccountStore } from "./account.store";
+import { EOrderItemStatus, EOrderStatus, EPaymentMethod } from "@/constants/enums";
+import { OrderService } from "@/services/order-service";
 
 class Chaining<T> {
   constructor(private value: T | undefined) {}
@@ -31,12 +31,12 @@ const getOrderItem = (productId: string) => (order: OrderModel) => {
   return new Chaining(item ? { order, item } : undefined);
 };
 
-export const useOrdersStore = defineStore('orders', () => {
-  // const apiService = new BaseApiService('/orders');
+export const useOrdersStore = defineStore("orders", () => {
+  const apiService = new OrderService();
 
   const accountStore = useAccountStore();
   const orders = reactive<OrderModel[]>([]);
-  const activeId = ref('ABC');
+  const activeId = ref("");
   const timeoutProductUpdateMap = new Map<string, number>();
 
   const activeOrder = computed(() => orders.find((order) => order.id === activeId.value));
@@ -48,7 +48,7 @@ export const useOrdersStore = defineStore('orders', () => {
       const takenNums = new Set<number>([0]);
 
       for (const order of orders) {
-        const [, orderNum] = order.name.split(' ');
+        const [, orderNum] = order.name.split(" ");
 
         if (!isNaN(+orderNum)) {
           takenNums.add(+orderNum);
@@ -81,6 +81,16 @@ export const useOrdersStore = defineStore('orders', () => {
     if (alsoSelect) activeId.value = newOrder.id;
   }
 
+  function addNewOrder() {
+    const orderId = crypto.randomUUID();
+
+    apiService.createOrder().then((res) => {
+      console.log(res.data);
+    });
+
+    addOrder({ id: orderId });
+  }
+
   function removeOrder(removedOrder: OrderModel) {
     orders.splice(0, orders.length, ...orders.filter((order) => order.id !== removedOrder.id));
   }
@@ -94,11 +104,11 @@ export const useOrdersStore = defineStore('orders', () => {
     return new Chaining<OrderModel>(order);
   };
 
-  function updateOrder(data: Partial<Pick<OrderModel, 'paymentInfo'>>, orderId?: string) {
+  function updateOrder(data: Partial<Pick<OrderModel, "paymentInfo">>, orderId?: string) {
     getOrder(orderId).then((order) => Object.assign(order, data));
   }
 
-  function addOrderItem(product: OrderItemModel['product'], orderId?: string) {
+  function addOrderItem(product: OrderItemModel["product"], orderId?: string) {
     getOrder(orderId).then((order) => {
       let timeoutId: number | undefined;
 
@@ -170,6 +180,7 @@ export const useOrdersStore = defineStore('orders', () => {
     orders,
     activeOrderId: activeId,
     activeOrder: activeOrder as DeepReadonly<typeof activeOrder>,
+    addNewOrder,
     addOrder,
     removeOrder,
     selectOrder,

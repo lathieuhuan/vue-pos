@@ -4,7 +4,7 @@ import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 
-import type { OrderModel, OrderPaymentInfo } from '@/types/order.types';
+import type { OrderModel, OrderPaymentInfo } from '@/models/order.model';
 import type { EPaymentMethod } from '@/constants/enums';
 import { formatNumber } from '@/utils';
 import { PAYMENT_METHODS } from '@/constants/lists';

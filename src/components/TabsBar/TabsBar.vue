@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="TInternalItem extends TabBarItem = TabBarItem">
-import { computed } from 'vue';
-import TabItem, { type TabItemProps } from './TabItem.vue';
+import { computed } from "vue";
+import TabItem, { type TabItemProps } from "./TabItem.vue";
 
 export type TabBarItem = {
   key: string;
@@ -13,9 +13,9 @@ export type TabsBarProps<TItem extends TabBarItem = TabBarItem> = {
   allowAdd?: boolean;
 };
 
-type ProcessedItem = {
-  value: TInternalItem;
-  tabProps: Pick<TabItemProps, 'isActive' | 'isLeftOfActive' | 'isRightOfActive'>;
+type RenderedItem = {
+  tabItem: TInternalItem;
+  tabProps: Pick<TabItemProps, "isActive" | "isLeftOfActive" | "isRightOfActive">;
 };
 
 const props = withDefaults(defineProps<TabsBarProps<TInternalItem>>(), {
@@ -23,28 +23,24 @@ const props = withDefaults(defineProps<TabsBarProps<TInternalItem>>(), {
 });
 
 defineEmits<{
-  (e: 'addTab'): void;
-  (e: 'changeActiveTab', item: TInternalItem): void;
-  (e: 'removeTab', item: TInternalItem): void;
+  (e: "addTab"): void;
+  (e: "changeActiveTab", item: TInternalItem): void;
+  (e: "removeTab", item: TInternalItem): void;
 }>();
 
-const data = computed(() => {
-  const activeIndex = props.items.findIndex((item) => item.key === props.activeKey);
-  const [activeLeftIndex, activeRightIndex] = [activeIndex - 1, activeIndex + 1];
+const activeIndex = computed(() => props.items.findIndex((item) => item.key === props.activeKey));
 
-  const items = props.items.map<ProcessedItem>((item, index) => ({
-    value: item,
+const renderedItems = computed(() => {
+  const [activeLeftIndex, activeRightIndex] = [activeIndex.value - 1, activeIndex.value + 1];
+
+  return props.items.map<RenderedItem>((item, index) => ({
+    tabItem: item,
     tabProps: {
-      isActive: index === activeIndex,
+      isActive: index === activeIndex.value,
       isLeftOfActive: index === activeLeftIndex,
       isRightOfActive: index === activeRightIndex,
     },
   }));
-
-  return {
-    activeIndex,
-    items,
-  };
 });
 </script>
 
@@ -58,14 +54,14 @@ const data = computed(() => {
         </div>
         <div class="relative z-10 pt-1.5 bg-transparent flex gap-1.5">
           <TabItem
-            v-for="{ value, tabProps } in data.items"
+            v-for="{ tabItem, tabProps } in renderedItems"
+            :key="tabItem.key"
             v-bind="tabProps"
             contentCls="px-3 py-1 rounded-lg flex gap-2 items-center leading-none cursor-default"
-            :key="value.key"
-            @click="$emit('changeActiveTab', value)"
+            @click="$emit('changeActiveTab', tabItem)"
           >
             <template v-slot:item>
-              <span class="font-medium">{{ value.label }}</span>
+              <span class="font-medium">{{ tabItem.label }}</span>
               <button
                 :class="[
                   'p-1 rounded-full flex',
@@ -74,7 +70,7 @@ const data = computed(() => {
                 @click="
                   (e) => {
                     e.stopPropagation();
-                    $emit('removeTab', value);
+                    $emit('removeTab', tabItem);
                   }
                 "
               >
@@ -86,7 +82,7 @@ const data = computed(() => {
           <TabItem
             contentCls="p-[0.4375rem] rounded-full flex"
             contentIs="button"
-            :isRightOfActive="data.activeIndex === data.items.length - 1"
+            :isRightOfActive="activeIndex === items.length - 1"
             @click="$emit('addTab')"
           >
             <template #item>
