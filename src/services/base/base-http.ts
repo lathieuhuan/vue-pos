@@ -62,7 +62,7 @@ export class BaseHttp {
     return this.http.get(url, params);
   };
 
-  post = (url = "", data: any, params?: AxiosRequestConfig) => {
+  post = (url = "", data?: any, params?: AxiosRequestConfig) => {
     return this.http.post(url, data, params);
   };
 }
