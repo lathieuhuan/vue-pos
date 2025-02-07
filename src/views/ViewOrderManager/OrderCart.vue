@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { nextTick, type DeepReadonly } from 'vue';
-import Button from 'primevue/button';
+import { nextTick, type DeepReadonly } from "vue";
+import Button from "primevue/button";
 
-import type { OrderItemModel } from '@/models/order.model';
-import { formatNumber } from '@/utils';
-import { EOrderItemStatus } from '@/constants/enums';
-import { useOrdersStore } from '@/stores/orders.store';
+import type { OrderItemModel } from "@/models/order.model";
+import { formatNumber } from "@/utils";
+import { useOrdersStore } from "@/stores/orders.store";
 
 // Component
-import InputNumber from '@/components/InputNumber/InputNumber.vue';
-import ProductSearch from './ProductSearch.vue';
+import InputNumber from "@/components/InputNumber/InputNumber.vue";
+import ProductSearch from "./ProductSearch.vue";
 
 const MAX_ITEM_QUANTITY = 99_999;
 const MIN_ITEM_QUANTITY = 0;
@@ -21,18 +20,14 @@ defineProps<{
 const ordersStore = useOrdersStore();
 
 const onChangeItemQuantity = (item: OrderItemModel, quantity: number) => {
-  if (
-    quantity >= MIN_ITEM_QUANTITY &&
-    quantity <= MAX_ITEM_QUANTITY &&
-    quantity !== item.quantity
-  ) {
+  if (quantity >= MIN_ITEM_QUANTITY && quantity <= MAX_ITEM_QUANTITY && quantity !== item.quantity) {
     ordersStore.updateOrderItemQuantity(item.product.id, quantity);
   }
 };
 
 const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputElement) => {
   await nextTick();
-  onChangeItemQuantity(item, +inputElmt.value.replace(/,/g, ''));
+  onChangeItemQuantity(item, +inputElmt.value.replace(/,/g, ""));
 };
 </script>
 
@@ -46,11 +41,11 @@ const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputEle
       class="mt-4 grid product-template-columns py-2 font-semibold opacity-70 rounded-full border border-surface-500"
     >
       <div></div>
-      <div>{{ 'Product Name' }}</div>
-      <div class="justify-center">{{ 'Quantity' }}</div>
-      <div class="justify-center">{{ 'Unit' }}</div>
-      <div class="justify-center">{{ 'Price' }}</div>
-      <div class="justify-center">{{ 'Total Amount' }}</div>
+      <div>{{ "Product Name" }}</div>
+      <div class="justify-center">{{ "Quantity" }}</div>
+      <div class="justify-center">{{ "Unit" }}</div>
+      <div class="justify-center">{{ "Price" }}</div>
+      <div class="justify-center">{{ "Total Amount" }}</div>
       <div><div class="w-8" /></div>
     </div>
 
@@ -70,26 +65,15 @@ const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputEle
             <p class="opacity-70">{{ item.product.code }}</p>
           </div>
           <div class="flex items-center gap-2">
-            <span
-              v-if="item.status === EOrderItemStatus.LOADING"
-              class="pi pi-spinner pi-spin opacity-70"
-            />
-            <span
-              v-if="item.status === EOrderItemStatus.ERROR"
-              class="pi pi-exclamation-circle"
-              style="color: var(--p-orange-500)"
-            />
+            <span v-if="item.status === 'LOADING'" class="pi pi-spinner pi-spin opacity-70" />
+            <span v-if="item.status === 'ERROR'" class="pi pi-exclamation-circle" style="color: var(--p-orange-500)" />
             <Button class="p-2" severity="danger" text @click="ordersStore.removeOrderItem(item)">
               <span class="pi pi-trash"></span>
             </Button>
           </div>
         </div>
         <div class="px-2 flex items-center gap-2">
-          <Button
-            class="w-7 h-7"
-            severity="secondary"
-            @click="onChangeItemQuantity(item, item.quantity - 1)"
-          >
+          <Button class="w-7 h-7" severity="secondary" @click="onChangeItemQuantity(item, item.quantity - 1)">
             <span class="pi pi-minus text-sm"></span>
           </Button>
           <InputNumber
@@ -101,11 +85,7 @@ const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputEle
             @input="onChangeItemQuantity(item, $event.value)"
             @blur="onBlurQuantityInput(item, $event.originalEvent.target)"
           />
-          <Button
-            class="w-7 h-7"
-            severity="secondary"
-            @click="onChangeItemQuantity(item, item.quantity + 1)"
-          >
+          <Button class="w-7 h-7" severity="secondary" @click="onChangeItemQuantity(item, item.quantity + 1)">
             <span class="pi pi-plus text-sm"></span>
           </Button>
         </div>

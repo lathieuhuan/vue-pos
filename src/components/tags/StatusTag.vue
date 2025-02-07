@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import Tag from 'primevue/tag';
-import type { StatusTagConfigMap } from './tags.config';
+import Tag from "primevue/tag";
 
-defineProps<{ value: string; configMap: StatusTagConfigMap }>();
+import type { Enum } from "@/constants/enums";
+import type { StatusSeverityMap } from "./tags.config";
+
+export interface StatusTagProps {
+  value?: Enum;
+  severityMap?: StatusSeverityMap;
+}
+
+defineProps<StatusTagProps>();
 </script>
 
 <template>
-  <Tag
-    :value="configMap[value].label"
-    :severity="configMap[value].severity"
-    rounded
-  />
+  <Tag :value="value" :severity="value?.key ? severityMap?.[value.key] : undefined" rounded />
 </template>

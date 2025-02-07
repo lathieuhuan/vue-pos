@@ -1,10 +1,12 @@
-import { ref, computed, reactive, type DeepReadonly } from "vue";
 import { defineStore } from "pinia";
-import type { OrderItemModel, OrderModel, OrderPaymentInfo } from "@/models/order.model";
+import { computed, reactive, ref, type DeepReadonly } from "vue";
+
+import type { OrderItemModel, OrderModel } from "@/models/order.model";
+import EOrderStatus from "@/constants/enums/EOrderStatus";
+import EPaymentMethod from "@/constants/enums/EPaymentMethod";
+import { OrderService } from "@/services/order-service";
 import { formatDate } from "@/utils";
 import { useAccountStore } from "./account.store";
-import { EOrderItemStatus, EOrderStatus, EPaymentMethod } from "@/constants/enums";
-import { OrderService } from "@/services/order-service";
 
 class Chaining<T> {
   constructor(private value: T | undefined) {}
@@ -39,7 +41,7 @@ export const useOrdersStore = defineStore("orders", () => {
   const activeId = ref("");
   const timeoutProductUpdateMap = new Map<string, number>();
 
-  const activeOrder = computed(() => orders.find((order) => order.id === activeId.value));
+  const activeOrder = computed<OrderModel | undefined>(() => orders.find((order) => order.id === activeId.value));
 
   function addOrder(orderInit?: Partial<OrderModel>, alsoSelect = true) {
     let name = orderInit?.name;
@@ -57,12 +59,8 @@ export const useOrdersStore = defineStore("orders", () => {
       name = `Order ${Math.max(...takenNums) + 1}`;
     }
 
-    const defaultPaymentInfo: OrderPaymentInfo = {
-      paymentMethod: EPaymentMethod.CASH,
-    };
-
     const newOrder: OrderModel = {
-      status: EOrderStatus.PROCESSING,
+      status: EOrderStatus.from("PROCESSING"),
       handler: accountStore.account.staff,
       customer: null,
       createdAt: formatDate(new Date()),
@@ -70,10 +68,7 @@ export const useOrdersStore = defineStore("orders", () => {
       ...orderInit,
       id: orderInit?.id || crypto.randomUUID(),
       name,
-      paymentInfo: {
-        ...defaultPaymentInfo,
-        ...orderInit?.paymentInfo,
-      },
+      paymentMethod: EPaymentMethod.from("CASH"),
     };
 
     orders.push(newOrder);
@@ -104,7 +99,7 @@ export const useOrdersStore = defineStore("orders", () => {
     return new Chaining<OrderModel>(order);
   };
 
-  function updateOrder(data: Partial<Pick<OrderModel, "paymentInfo">>, orderId?: string) {
+  function updateOrder(data: Partial<Pick<OrderModel, "paymentMethod">>, orderId?: string) {
     getOrder(orderId).then((order) => Object.assign(order, data));
   }
 
@@ -117,23 +112,23 @@ export const useOrdersStore = defineStore("orders", () => {
       getOrderItem(product.id)(order).then(
         ({ item }) => {
           item.quantity += 1;
-          item.status = EOrderItemStatus.LOADING;
+          item.status = "LOADING";
 
           timeoutId = setTimeout(() => {
-            item.status = EOrderItemStatus.SUCCESS;
+            item.status = "SUCCESS";
           }, 500);
         },
         () => {
           order.items.push({
             quantity: 1,
-            status: EOrderItemStatus.LOADING,
+            status: "LOADING",
             product,
           });
 
           const item = order.items[order.items.length - 1];
 
           timeoutId = setTimeout(() => {
-            item.status = EOrderItemStatus.SUCCESS;
+            item.status = "SUCCESS";
           }, 500);
         },
       );
@@ -149,10 +144,10 @@ export const useOrdersStore = defineStore("orders", () => {
         clearTimeout(timeoutProductUpdateMap.get(productId));
 
         item.quantity = newQuantity;
-        item.status = EOrderItemStatus.LOADING;
+        item.status = "LOADING";
 
         const timeoutId = setTimeout(() => {
-          item.status = EOrderItemStatus.SUCCESS;
+          item.status = "SUCCESS";
         }, 500);
 
         timeoutProductUpdateMap.set(productId, timeoutId);
@@ -165,8 +160,8 @@ export const useOrdersStore = defineStore("orders", () => {
       ?.then(({ item, order }) => {
         clearTimeout(timeoutProductUpdateMap.get(product.id));
 
-        if (item.status !== EOrderItemStatus.ERROR) {
-          item.status = EOrderItemStatus.LOADING;
+        if (item.status !== "ERROR") {
+          item.status = "LOADING";
         }
 
         const timeout = setTimeout(() => {

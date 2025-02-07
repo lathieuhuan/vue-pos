@@ -1,10 +1,11 @@
-import type { OrderModel } from '@/types/order.types';
-import type { AccountModel } from '@/types/account.types';
-import { formatDate } from '@/utils';
-import { EOrderStatus, EPaymentMethod } from '@/constants/enums';
+import type { OrderModel } from "@/models/order.model";
+import type { AccountModel } from "@/models/account.model";
+import { formatDate } from "@/utils";
+import EOrderStatus from "@/constants/enums/EOrderStatus";
+import EPaymentMethod from "@/constants/enums/EPaymentMethod";
 
 const db = {
-  get<T>(key: string, defaultValue = '{}'): T {
+  get<T>(key: string, defaultValue = "{}"): T {
     return JSON.parse(localStorage.getItem(key) || defaultValue);
   },
   set(key: string, data: any) {
@@ -27,8 +28,8 @@ const ACCOUNT_SERVICE = {
   getAccount: () => {
     const account: AccountModel = {
       staff: {
-        id: 'SS',
-        name: 'Super Staff',
+        id: "SS",
+        name: "Super Staff",
       },
     };
     return account;
@@ -37,23 +38,22 @@ const ACCOUNT_SERVICE = {
 
 const ORDER_SERVICE = {
   getOrders: () => {
-    return db.get<OrderModel[]>('orders', '[]');
+    return db.get<OrderModel[]>("orders", "[]");
   },
   createNewOrder: () => {
     const orders = ORDER_SERVICE.getOrders();
     const newOrder: OrderModel = {
       id: `${getNewOrderId(orders)}`,
+      name: "New Order",
       createdAt: formatDate(new Date()),
       customer: null,
       handler: ACCOUNT_SERVICE.getAccount().staff,
-      status: EOrderStatus.PROCESSING,
-      paymentInfo: {
-        paymentMethod: EPaymentMethod.CASH,
-      },
+      status: EOrderStatus.from("PROCESSING"),
+      paymentMethod: EPaymentMethod.from("CASH"),
       items: [],
     };
 
-    db.set('orders', orders.concat(newOrder));
+    db.set("orders", orders.concat(newOrder));
     return newOrder;
   },
 };

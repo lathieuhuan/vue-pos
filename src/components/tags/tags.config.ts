@@ -1,16 +1,9 @@
-import type { EOrderStatus } from '@/constants/enums';
-import { type TagProps } from 'primevue/tag';
+import type { TagProps } from "primevue/tag";
+import type { OrderStatus } from "@/constants/enums/EOrderStatus";
 
-type StatusTagConfig = {
-  label: string;
-  severity: TagProps['severity'];
-};
+export type StatusSeverityMap<T extends string = string> = Record<T, TagProps["severity"]>;
 
-export type StatusTagConfigMap<T extends string = string> = Record<T, StatusTagConfig>;
-
-export const ORDER_STATUS_TAG_CONFIG_MAP: StatusTagConfigMap<EOrderStatus> = {
-  PROCESSING: {
-    label: 'Processing',
-    severity: 'info',
-  },
+export const ORDER_STATUS_SEVERITY: StatusSeverityMap<OrderStatus> = {
+  PROCESSING: "info",
+  SUCCESS: "success",
 };

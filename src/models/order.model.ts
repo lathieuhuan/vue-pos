@@ -1,17 +1,19 @@
-import type { EOrderItemStatus, EOrderStatus, EPaymentMethod } from "@/constants/enums";
+import type EOrderStatus from "@/constants/enums/EOrderStatus";
+import type EPaymentMethod from "@/constants/enums/EPaymentMethod";
 import type { CustomerModel } from "./customer.model";
-import type { StaffModel } from "./staff.model";
 import type { ProductModel } from "./product.model";
+import type { StaffModel } from "./staff.model";
+
+export type OrderItemStatus = "SUCCESS" | "ERROR" | "LOADING";
 
 export type OrderItemModel = {
-  status: EOrderItemStatus;
+  status: OrderItemStatus;
   product: ProductModel;
   quantity: number;
 };
 
-export type OrderPaymentInfo = {
-  paymentMethod: EPaymentMethod;
-};
+// export type OrderPaymentInfo = {
+// };
 
 export type OrderModel = {
   id: string;
@@ -21,5 +23,6 @@ export type OrderModel = {
   handler: StaffModel;
   customer: CustomerModel | null;
   createdAt: string;
-  paymentInfo: OrderPaymentInfo;
+  paymentMethod: EPaymentMethod;
+  // paymentInfo: OrderPaymentInfo;
 };
