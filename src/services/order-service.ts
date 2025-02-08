@@ -5,6 +5,6 @@ export class OrderService extends BaseApiService {
   protected baseURL = "/orders";
 
   createOrder(): ApiResponse<OrderModel> {
-    return this.post("", {});
+    return this.post("");
   }
 }
