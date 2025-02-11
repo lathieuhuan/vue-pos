@@ -1,12 +1,13 @@
 import { defineStore } from "pinia";
 import { computed, reactive, ref, type DeepReadonly } from "vue";
 
-import type { OrderItemModel, OrderModel } from "@/models/order.model";
+import { OrderModel, type OrderItemModel } from "@/models/order.model";
 import EOrderStatus from "@/constants/enums/EOrderStatus";
 import EPaymentMethod from "@/constants/enums/EPaymentMethod";
 import { OrderService } from "@/services/order-service";
 import { formatDate } from "@/utils";
 import { useAccountStore } from "./account.store";
+import { plainToInstance } from "class-transformer";
 
 class Chaining<T> {
   constructor(private value: T | undefined) {}
@@ -43,6 +44,19 @@ export const useOrdersStore = defineStore("orders", () => {
 
   const activeOrder = computed<OrderModel | undefined>(() => orders.find((order) => order.id === activeId.value));
 
+  function getNextOrderName() {
+    const takenNums = new Set<number>([0]);
+
+    for (const order of orders) {
+      const [, orderNum] = order.name.split(" ");
+
+      if (!isNaN(+orderNum)) {
+        takenNums.add(+orderNum);
+      }
+    }
+    return `Order ${Math.max(...takenNums) + 1}`;
+  }
+
   function addOrder(orderInit?: Partial<OrderModel>, alsoSelect = true) {
     let name = orderInit?.name;
 
@@ -58,6 +72,8 @@ export const useOrdersStore = defineStore("orders", () => {
       }
       name = `Order ${Math.max(...takenNums) + 1}`;
     }
+
+    console.log(orderInit);
 
     const newOrder: OrderModel = {
       status: EOrderStatus.from("PROCESSING"),
@@ -76,14 +92,14 @@ export const useOrdersStore = defineStore("orders", () => {
     if (alsoSelect) activeId.value = newOrder.id;
   }
 
-  function addNewOrder() {
-    const orderId = crypto.randomUUID();
+  async function addNewOrder() {
+    const res = await apiService.createOrder();
+
+    //
 
     apiService.createOrder().then((res) => {
-      console.log(res.data);
+      addOrder(plainToInstance(OrderModel, res.data.data));
     });
-
-    addOrder({ id: orderId });
   }
 
   function removeOrder(removedOrder: OrderModel) {

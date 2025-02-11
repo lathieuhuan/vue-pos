@@ -15,7 +15,7 @@ export type OrderItemModel = {
 // export type OrderPaymentInfo = {
 // };
 
-export type OrderModel = {
+export class OrderModel {
   id: string;
   name: string;
   status: EOrderStatus;
@@ -25,4 +25,4 @@ export type OrderModel = {
   createdAt: string;
   paymentMethod: EPaymentMethod;
   // paymentInfo: OrderPaymentInfo;
-};
+}
