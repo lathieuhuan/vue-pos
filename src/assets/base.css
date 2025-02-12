@@ -16,11 +16,13 @@
   .flex-center {
     @apply flex justify-center items-center;
   }
+  .full-stretch {
+    @apply top-0 bottom-0 left-0 right-0;
+  }
 }
 
 body {
-  min-height: 100vh;
-  font-family: 'Open Sans', sans-serif;
+  font-family: "Open Sans", sans-serif;
   font-size: 0.875rem;
   line-height: 20px;
   text-rendering: optimizeLegibility;

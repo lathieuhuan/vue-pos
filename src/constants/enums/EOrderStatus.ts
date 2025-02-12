@@ -1,5 +1,4 @@
 import { Enum, type EnumMap } from "./Enum";
-export { Enum };
 
 const ORDER_STATUS = {
   PROCESSING: ["PROCESSING", "Processing"],

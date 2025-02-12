@@ -4,7 +4,7 @@ import Button from "primevue/button";
 
 import type { OrderItemModel } from "@/models/order.model";
 import { formatNumber } from "@/utils";
-import { useOrdersStore } from "@/stores/orders.store";
+import { useOrderStore } from "@/stores/order";
 
 // Component
 import InputNumber from "@/components/InputNumber/InputNumber.vue";
@@ -17,11 +17,11 @@ defineProps<{
   items: DeepReadonly<OrderItemModel[]>;
 }>();
 
-const ordersStore = useOrdersStore();
+const orderStore = useOrderStore();
 
 const onChangeItemQuantity = (item: OrderItemModel, quantity: number) => {
   if (quantity >= MIN_ITEM_QUANTITY && quantity <= MAX_ITEM_QUANTITY && quantity !== item.quantity) {
-    ordersStore.updateOrderItemQuantity(item.product.id, quantity);
+    orderStore.updateOrderItemQuantity(item.product.id, quantity);
   }
 };
 
@@ -34,7 +34,7 @@ const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputEle
 <template>
   <div>
     <div>
-      <ProductSearch @selectProduct="(product) => ordersStore.addOrderItem(product)" />
+      <ProductSearch @selectProduct="(product) => orderStore.addOrderItem(product)" />
     </div>
 
     <div
@@ -67,7 +67,7 @@ const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputEle
           <div class="flex items-center gap-2">
             <span v-if="item.status === 'LOADING'" class="pi pi-spinner pi-spin opacity-70" />
             <span v-if="item.status === 'ERROR'" class="pi pi-exclamation-circle" style="color: var(--p-orange-500)" />
-            <Button class="p-2" severity="danger" text @click="ordersStore.removeOrderItem(item)">
+            <Button class="p-2" severity="danger" text @click="orderStore.removeOrderItem(item)">
               <span class="pi pi-trash"></span>
             </Button>
           </div>

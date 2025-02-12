@@ -1,5 +1,8 @@
-import type EOrderStatus from "@/constants/enums/EOrderStatus";
-import type EPaymentMethod from "@/constants/enums/EPaymentMethod";
+import { Transform } from "class-transformer";
+
+import { Enum } from "@/constants/enums";
+import EOrderStatus from "@/constants/enums/EOrderStatus";
+import EPaymentMethod from "@/constants/enums/EPaymentMethod";
 import type { CustomerModel } from "./customer.model";
 import type { ProductModel } from "./product.model";
 import type { StaffModel } from "./staff.model";
@@ -17,12 +20,19 @@ export type OrderItemModel = {
 
 export class OrderModel {
   id: string;
-  name: string;
+
+  @Transform(Enum.transformTo(EOrderStatus))
   status: EOrderStatus;
+
   items: OrderItemModel[];
-  handler: StaffModel;
-  customer: CustomerModel | null;
+  handler: StaffModel = {
+    id: "1",
+    name: "Staff",
+  };
+  customer: CustomerModel | null = null;
   createdAt: string;
-  paymentMethod: EPaymentMethod;
+
+  @Transform(Enum.transformTo(EPaymentMethod))
+  paymentMethod: EPaymentMethod = EPaymentMethod.from("CASH");
   // paymentInfo: OrderPaymentInfo;
 }

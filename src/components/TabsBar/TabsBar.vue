@@ -22,6 +22,10 @@ const props = withDefaults(defineProps<TabsBarProps<TInternalItem>>(), {
   allowAdd: false,
 });
 
+defineSlots<{
+  default?(props: TInternalItem): any;
+}>();
+
 defineEmits<{
   (e: "addTab"): void;
   (e: "changeActiveTab", item: TInternalItem): void;
@@ -61,12 +65,12 @@ const renderedItems = computed(() => {
             @click="$emit('changeActiveTab', tabItem)"
           >
             <template v-slot:item>
-              <span class="font-medium">{{ tabItem.label }}</span>
+              <div v-if="$slots.default">
+                <slot v-bind="tabItem"></slot>
+              </div>
+              <span v-else class="font-medium">{{ tabItem.label }}</span>
               <button
-                :class="[
-                  'p-1 rounded-full flex',
-                  tabProps.isActive ? 'hover:bg-surface-200' : 'hover:bg-surface-400',
-                ]"
+                :class="['p-1 rounded-full flex', tabProps.isActive ? 'hover:bg-surface-200' : 'hover:bg-surface-400']"
                 @click="
                   (e) => {
                     e.stopPropagation();

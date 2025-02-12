@@ -1,10 +1,11 @@
-import { BaseApiService, type ApiResponse } from "./base/base-api-service";
 import type { OrderModel } from "@/models/order.model";
+import { ApiPromise } from "./base/api-promise";
+import { BaseApiService } from "./base/base-api-service";
 
 export class OrderService extends BaseApiService {
   protected baseURL = "/orders";
 
-  createOrder(): ApiResponse<OrderModel> {
-    return this.post("");
+  createOrder() {
+    return new ApiPromise<OrderModel>(() => this.post(""));
   }
 }

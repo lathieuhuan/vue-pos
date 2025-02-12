@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Component } from 'vue';
+import type { Component } from "vue";
 
 export type TabItemProps = {
   isActive?: boolean;
@@ -10,11 +10,11 @@ export type TabItemProps = {
 };
 
 withDefaults(defineProps<TabItemProps>(), {
-  contentIs: 'div',
+  contentIs: "div",
 });
 
 defineEmits<{
-  (e: 'click'): void;
+  (e: "click"): void;
 }>();
 </script>
 
@@ -28,11 +28,7 @@ defineEmits<{
         'rounded-bl-lg': isRightOfActive,
       }"
     >
-      <component
-        :is="contentIs"
-        :class="[contentCls, !isActive && 'hover:bg-surface-300']"
-        @click="$emit('click')"
-      >
+      <component :is="contentIs" :class="[contentCls, !isActive && 'hover:bg-surface-300']" @click="$emit('click')">
         <slot name="item"></slot>
       </component>
     </div>

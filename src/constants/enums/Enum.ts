@@ -18,6 +18,11 @@ export abstract class Enum<TKey extends string = string> {
       : [undefined, undefined, undefined];
   }
 
+  /** For Transform of class-transformer */
+  static transformTo(EnumClass: { new (value: string): void }) {
+    return (obj: { value: string }) => new EnumClass(obj.value);
+  }
+
   valueOf() {
     return this.value;
   }
