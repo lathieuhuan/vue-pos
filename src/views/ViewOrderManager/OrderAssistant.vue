@@ -93,7 +93,7 @@ const onSelectPaymentMethod = (method: EPaymentMethod) => {
               class="cursor-pointer"
               :key="option.key"
               :value="option.value"
-              :severity="order.paymentMethod.equals(option.value) ? 'primary' : 'secondary'"
+              :severity="order.paymentMethod?.equals(option.value) ? 'primary' : 'secondary'"
               @click="onSelectPaymentMethod(option.value)"
             />
           </div>

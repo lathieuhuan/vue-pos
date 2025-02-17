@@ -19,8 +19,8 @@ export type ApiResponse<TData> = Promise<AxiosResponse<ApiData<TData>, ApiError>
 export abstract class BaseApiService {
   protected abstract baseURL: string;
 
-  protected get = <TData = any>(url = "", params?: AxiosRequestConfig<any>): ApiResponse<TData> => {
-    return baseHttp.get(`${this.baseURL}${url}`, params);
+  protected get = <TData = any>(url = "", params?: AxiosRequestConfig<any>): ApiData<TData> => {
+    return baseHttp.get(`${this.baseURL}${url}`, params).then((res) => res.data);
   };
 
   protected post = <TData = any>(url = "", data?: any, params?: AxiosRequestConfig): ApiData<TData> => {

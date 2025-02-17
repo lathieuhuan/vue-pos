@@ -6,6 +6,7 @@ import EPaymentMethod from "@/constants/enums/EPaymentMethod";
 import type { CustomerModel } from "./customer.model";
 import type { ProductModel } from "./product.model";
 import type { StaffModel } from "./staff.model";
+import { formatDate } from "@/utils";
 
 export type OrderItemStatus = "SUCCESS" | "ERROR" | "LOADING";
 
@@ -22,7 +23,7 @@ export class OrderModel {
   id: string;
 
   @Transform(Enum.transformTo(EOrderStatus))
-  status: EOrderStatus;
+  status?: EOrderStatus;
 
   items: OrderItemModel[];
   handler: StaffModel = {
@@ -30,9 +31,12 @@ export class OrderModel {
     name: "Staff",
   };
   customer: CustomerModel | null = null;
+
+  @Transform(({ value }) => formatDate(new Date(value)))
   createdAt: string;
 
   @Transform(Enum.transformTo(EPaymentMethod))
-  paymentMethod: EPaymentMethod = EPaymentMethod.from("CASH");
+  paymentMethod?: EPaymentMethod;
+
   // paymentInfo: OrderPaymentInfo;
 }

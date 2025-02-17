@@ -6,6 +6,6 @@ export class OrderService extends BaseApiService {
   protected baseURL = "/orders";
 
   createOrder() {
-    return new ApiPromise<OrderModel>(() => this.post(""));
+    return new ApiPromise<OrderModel>(this.post);
   }
 }

@@ -1,10 +1,15 @@
 import type { ProductModel } from "@/models/product.model";
-import { BaseApiService, type ApiResponse } from "./base/base-api-service";
+import { ApiPromise } from "./base/api-promise";
+import { BaseApiService } from "./base/base-api-service";
+
+type ProductSearchParams = {
+  keyword: string;
+};
 
 export class ProductService extends BaseApiService {
   protected baseURL = "/products";
 
-  getProducts(): ApiResponse<ProductModel[]> {
-    return this.get("");
+  searchProducts(params: ProductSearchParams) {
+    return new ApiPromise<ProductModel>(() => this.get("", { params }));
   }
 }

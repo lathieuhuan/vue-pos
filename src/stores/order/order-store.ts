@@ -9,12 +9,12 @@ import { OrderService } from "@/services/order-service";
 // import { formatDate } from "@/utils";
 // import { useAccountStore } from "../account.store";
 import type { OrderManager, OrderManagerInfo } from "./order-store.types";
-import { useNotiStore } from "../noti";
+import { useNotifier } from "@/hooks/useNotifier";
 
 class Chaining<TObj> {
   constructor(private value: TObj | undefined) {}
 
-  then = <TResult>(onSuccess: (value: TObj) => TResult, onError?: () => void): Chaining<TResult | undefined> => {
+  then = <TResult>(onSuccess: (value: TObj) => TResult, onError?: () => void): Chaining<TResult> => {
     let result: TResult | undefined;
 
     if (this.value) {
@@ -25,9 +25,9 @@ class Chaining<TObj> {
     return new Chaining(result);
   };
 
-  // select = <TKey extends keyof TObj>(key: TKey): Chaining<TObj[TKey]> => {
-  //   return new Chaining(this.value?.[key]);
-  // };
+  set = <TKey extends keyof TObj>(key: TKey, value: TObj[TKey]) => {
+    if (this.value) Object.assign(this.value, { [key]: value });
+  };
 
   pipe = <K>(callback: (value: TObj) => K | Chaining<K>) => {
     if (this.value) {
@@ -46,7 +46,7 @@ const getOrderItem = (productId: string) => (order: OrderModel) => {
 export const useOrderStore = defineStore("order", () => {
   const apiService = new OrderService();
 
-  const notiStore = useNotiStore();
+  const notifier = useNotifier();
   // const accountStore = useAccountStore();
   const orderManagers = reactive<OrderManager[]>([]);
   /** manager id */
@@ -123,25 +123,26 @@ export const useOrderStore = defineStore("order", () => {
   // }
 
   function addNewOrder() {
-    const manager = createManager({ isLoading: true });
+    const managerId = crypto.randomUUID();
 
-    orderManagers.push(manager);
+    orderManagers.push(createManager({ id: managerId, isLoading: true }));
 
-    selectOrder(manager);
+    selectOrder(managerId);
+
+    const manager = getManager(managerId);
 
     apiService
       .createOrder()
       .then((data) => {
-        getManager(manager.id).then((manager) => {
-          manager.isLoading = false;
-          manager.order = plainToInstance(OrderModel, data);
-        });
+        manager.set("order", plainToInstance(OrderModel, data));
       })
       .catch((err) => {
-        console.log(err);
-        // notiStore.notify();
+        notifier.notify({
+          type: "error",
+          message: err.message,
+        });
       })
-      .excute();
+      .excute(() => manager.set("isLoading", false));
   }
 
   function removeOrder(removedManager: OrderManager) {

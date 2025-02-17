@@ -16,9 +16,10 @@ export class ApiPromise<TData, TError = ApiError> {
     return this;
   }
 
-  excute() {
+  excute(_finally?: () => void) {
     this._excute()
       .then((res) => this.onSuccess(res.data))
-      .catch((err) => this.onError(err));
+      .catch((err) => this.onError(err))
+      .finally(_finally);
   }
 }
