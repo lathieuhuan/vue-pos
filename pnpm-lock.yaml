@@ -11,6 +11,9 @@ importers:
       '@primevue/themes':
         specifier: 4.1.0
         version: 4.1.0
+      '@tanstack/vue-query':
+        specifier: ^5.66.4
+        version: 5.66.4(vue@3.5.13(typescript@5.6.2))
       axios:
         specifier: 1.7.7
         version: 1.7.7
@@ -27,7 +30,7 @@ importers:
         specifier: 4.1.0
         version: 4.1.0(vue@3.5.13(typescript@5.6.2))
       reflect-metadata:
-        specifier: ^0.2.2
+        specifier: 0.2.2
         version: 0.2.2
       vue:
         specifier: 3.5.13
@@ -388,6 +391,22 @@ packages:
     resolution: {integrity: sha512-k3MVFD9Oq+laHkw2N2v7ILgoa9017ZMF/inTtHzyTVZjYs9cSH18sdyAf6spBAJIGwJ5UaC7et2ZH1WCdlhkMw==}
     cpu: [x64]
     os: [win32]
+
+  '@tanstack/match-sorter-utils@8.19.4':
+    resolution: {integrity: sha512-Wo1iKt2b9OT7d+YGhvEPD3DXvPv2etTusIMhMUoG7fbhmxcXCtIjJDEygy91Y2JFlwGyjqiBPRozme7UD8hoqg==}
+    engines: {node: '>=12'}
+
+  '@tanstack/query-core@5.66.4':
+    resolution: {integrity: sha512-skM/gzNX4shPkqmdTCSoHtJAPMTtmIJNS0hE+xwTTUVYwezArCT34NMermABmBVUg5Ls5aiUXEDXfqwR1oVkcA==}
+
+  '@tanstack/vue-query@5.66.4':
+    resolution: {integrity: sha512-N0ucQkacKNLQTnr+s6vRlmYgR0D/C6oNwk3tTnxKhiIaZjSnCyfv70MNfNYuOpH9zsp76c6J4igjwGnGWPnBAA==}
+    peerDependencies:
+      '@vue/composition-api': ^1.1.2
+      vue: ^2.6.0 || ^3.3.0
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
 
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
@@ -889,6 +908,9 @@ packages:
   reflect-metadata@0.2.2:
     resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
 
+  remove-accents@0.5.0:
+    resolution: {integrity: sha512-8g3/Otx1eJaVD12e31UbJj1YzdtVvzH85HV7t+9MJYk/u3XmkOUJ5Ys9wQrf9PCPK8+xn4ymzqYCiZl6QWKn+A==}
+
   resolve@1.22.10:
     resolution: {integrity: sha512-NPRy+/ncIMeDlTAsuqwKIiferiawhefFJtkNSW0qZJEqMEb+qBt/77B/jGeeek+F0uOeN05CDa6HXbbIgtVX4w==}
     engines: {node: '>= 0.4'}
@@ -1283,6 +1305,20 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.34.1':
     optional: true
+
+  '@tanstack/match-sorter-utils@8.19.4':
+    dependencies:
+      remove-accents: 0.5.0
+
+  '@tanstack/query-core@5.66.4': {}
+
+  '@tanstack/vue-query@5.66.4(vue@3.5.13(typescript@5.6.2))':
+    dependencies:
+      '@tanstack/match-sorter-utils': 8.19.4
+      '@tanstack/query-core': 5.66.4
+      '@vue/devtools-api': 6.6.4
+      vue: 3.5.13(typescript@5.6.2)
+      vue-demi: 0.14.10(vue@3.5.13(typescript@5.6.2))
 
   '@types/estree@1.0.6': {}
 
@@ -1771,6 +1807,8 @@ snapshots:
       picomatch: 2.3.1
 
   reflect-metadata@0.2.2: {}
+
+  remove-accents@0.5.0: {}
 
   resolve@1.22.10:
     dependencies:

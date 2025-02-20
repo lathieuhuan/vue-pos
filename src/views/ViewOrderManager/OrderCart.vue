@@ -3,6 +3,7 @@ import { nextTick, type DeepReadonly } from "vue";
 import Button from "primevue/button";
 
 import type { OrderItemModel } from "@/models/order.model";
+import type { ProductModel } from "@/models/product.model";
 import { formatNumber } from "@/utils";
 import { useOrderStore } from "@/stores/order";
 
@@ -19,6 +20,10 @@ defineProps<{
 
 const orderStore = useOrderStore();
 
+const onAddOrderItem = (product: ProductModel) => {
+  orderStore.addOrderItem(orderStore.activeManagerId, product);
+};
+
 const onChangeItemQuantity = (item: OrderItemModel, quantity: number) => {
   if (quantity >= MIN_ITEM_QUANTITY && quantity <= MAX_ITEM_QUANTITY && quantity !== item.quantity) {
     orderStore.updateOrderItemQuantity(item.product.id, quantity);
@@ -34,7 +39,7 @@ const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputEle
 <template>
   <div>
     <div>
-      <ProductSearch @selectProduct="(product) => orderStore.addOrderItem(product)" />
+      <ProductSearch @selectProduct="onAddOrderItem" />
     </div>
 
     <div

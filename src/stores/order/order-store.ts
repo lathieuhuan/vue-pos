@@ -2,13 +2,15 @@ import { plainToInstance } from "class-transformer";
 import { defineStore } from "pinia";
 import { computed, reactive, ref, type DeepReadonly } from "vue";
 
+import type { ProductModel } from "@/models/product.model";
+import type { OrderManager, OrderManagerInfo } from "./order-store.types";
+
 import { OrderModel, type OrderItemModel } from "@/models/order.model";
 // import EOrderStatus from "@/constants/enums/EOrderStatus";
 // import EPaymentMethod from "@/constants/enums/EPaymentMethod";
 import { OrderService } from "@/services/order-service";
 // import { formatDate } from "@/utils";
 // import { useAccountStore } from "../account.store";
-import type { OrderManager, OrderManagerInfo } from "./order-store.types";
 import { useNotifier } from "@/hooks/useNotifier";
 
 class Chaining<TObj> {
@@ -27,6 +29,10 @@ class Chaining<TObj> {
 
   set = <TKey extends keyof TObj>(key: TKey, value: TObj[TKey]) => {
     if (this.value) Object.assign(this.value, { [key]: value });
+  };
+
+  valueOf = () => {
+    return this.value;
   };
 
   pipe = <K>(callback: (value: TObj) => K | Chaining<K>) => {
@@ -134,7 +140,7 @@ export const useOrderStore = defineStore("order", () => {
     apiService
       .createOrder()
       .then((data) => {
-        manager.set("order", plainToInstance(OrderModel, data));
+        manager.set("order", plainToInstance(OrderModel, data.data));
       })
       .catch((err) => {
         notifier.notify({
@@ -142,46 +148,25 @@ export const useOrderStore = defineStore("order", () => {
           message: err.message,
         });
       })
-      .excute(() => manager.set("isLoading", false));
+      .finally(() => manager.set("isLoading", false));
   }
 
-  function removeOrder(removedManager: OrderManager) {
-    const removedIndex = orderManagers.findIndex((manager) => manager.id === removedManager.id);
+  function addOrderItem(managerId: string, product: ProductModel) {
+    const order = getOrder(managerId).valueOf();
 
-    if (removedIndex !== -1) {
-      orderManagers.splice(removedIndex, 1);
+    if (order) {
+      order.items.push({
+        product,
+        quantity: 1,
+        status: "LOADING",
+      });
+
+      apiService.addOrderItem(order.id, product.id).then((data) => console.log(data.data));
     }
   }
 
-  function addOrderItem(product: OrderItemModel["product"], orderId?: string) {
-    // getOrder(orderId).then((order) => {
-    //   let timeoutId: number | undefined;
-    //   clearTimeout(timeoutProductUpdateMap.get(product.id));
-    //   getOrderItem(product.id)(order).then(
-    //     ({ item }) => {
-    //       item.quantity += 1;
-    //       item.status = "LOADING";
-    //       timeoutId = setTimeout(() => {
-    //         item.status = "SUCCESS";
-    //       }, 500);
-    //     },
-    //     () => {
-    //       order.items.push({
-    //         quantity: 1,
-    //         status: "LOADING",
-    //         product,
-    //       });
-    //       const item = order.items[order.items.length - 1];
-    //       timeoutId = setTimeout(() => {
-    //         item.status = "SUCCESS";
-    //       }, 500);
-    //     },
-    //   );
-    //   if (timeoutId !== undefined) timeoutProductUpdateMap.set(product.id, timeoutId);
-    // });
-  }
-
-  function updateOrderItemQuantity(productId: string, newQuantity: number, orderId?: string) {
+  function updateOrderItemQuantity(productId: string, newQuantity: number, orderId?: OrderModel["id"]) {
+    // apiService.addOrderItem();
     // getOrder(orderId)
     //   .pipe(getOrderItem(productId))
     //   ?.then(({ item }) => {
@@ -193,6 +178,14 @@ export const useOrderStore = defineStore("order", () => {
     //     }, 500);
     //     timeoutProductUpdateMap.set(productId, timeoutId);
     //   });
+  }
+
+  function removeOrder(removedManager: OrderManager) {
+    const removedIndex = orderManagers.findIndex((manager) => manager.id === removedManager.id);
+
+    if (removedIndex !== -1) {
+      orderManagers.splice(removedIndex, 1);
+    }
   }
 
   function removeOrderItem({ product }: OrderItemModel, orderId?: string) {

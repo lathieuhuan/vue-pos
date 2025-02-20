@@ -1,72 +1,78 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import Menu, { type MenuMethods } from 'primevue/menu';
-import Image from 'primevue/image';
+import { computed, reactive, ref, toRaw, watch } from "vue";
+import Image from "primevue/image";
+import Menu, { type MenuMethods } from "primevue/menu";
 
-import type { ProductModel } from '@/models/product.model';
-import { useProductsSearcher } from '@/hooks/useProductsSearcher';
-import { formatNumber } from '@/utils';
+import type { ProductModel } from "@/models/product.model";
+import type { ProductQueryParams } from "@/models/request/ProductQueryParams";
 
-const MIN_VALID_KEYWORD = 1;
+import { MIN_KEYWORD_LENGTH, useInfiniteProductQuery } from "@/hooks/useInfiniteProductQuery";
+import { formatNumber } from "@/utils";
 
-type MenuEndState = 'INVALID' | 'EMPTY' | 'LOADING' | 'NONE' | 'FETCH_MORE';
+type MenuEndState = "INVALID" | "EMPTY" | "LOADING" | "NONE" | "FETCH_MORE";
 
 const emit = defineEmits<{
-  (e: 'selectProduct', product: ProductModel): void;
+  (e: "selectProduct", product: ProductModel): void;
 }>();
 
-let timeoutId: number;
-const { data, searchProducts } = useProductsSearcher();
-const keyword = ref('');
+const queryParams = reactive<ProductQueryParams>({});
+const { isLoading, data: products } = useInfiniteProductQuery(queryParams);
+
+// watch(products, () => {
+//   console.log(products.value);
+// });
+
+// ===== MENU =====
+
 const menu = ref<MenuMethods>();
-const inputRef = ref<HTMLInputElement>();
 
 const menuEndState = computed<MenuEndState>(() => {
-  if (keyword.value.length < MIN_VALID_KEYWORD) {
-    return 'INVALID';
+  const minLength = queryParams.keyword?.length || 0;
+
+  if (minLength < MIN_KEYWORD_LENGTH) {
+    return "INVALID";
   }
-  if (data.loading) {
-    return 'LOADING';
+  if (isLoading.value) {
+    return "LOADING";
   }
   // if (canFetchMore) {
   //   return "FETCH_MORE"
   // }
-  if (!data.products.length) {
-    return 'EMPTY';
+  if (!products.value.length) {
+    return "EMPTY";
   }
-  return 'NONE';
+  return "NONE";
 });
 
-const updateKeyword = (value: string) => {
-  keyword.value = value;
-  if (inputRef.value) inputRef.value.value = value;
-};
+// ===== INPUT HANDLERS =====
+
+const inputRef = ref<HTMLInputElement>();
+let timeoutId: number;
 
 const onInputKeyword = (e: Event) => {
-  keyword.value = (e.target as HTMLInputElement).value.trim();
+  const value = (e.target as HTMLInputElement).value.trim();
 
   clearTimeout(timeoutId);
 
-  if (keyword.value.length >= MIN_VALID_KEYWORD) {
-    data.loading = true;
+  timeoutId = setTimeout(() => {
+    queryParams.keyword = value;
+  }, 150);
+};
 
-    timeoutId = setTimeout(() => {
-      searchProducts(keyword.value.toLowerCase());
-    }, 150);
-  } else {
-    data.products.splice(0);
-  }
+const updateKeyword = (value: string) => {
+  queryParams.keyword = value;
+  if (inputRef.value) inputRef.value.value = value;
 };
 
 const onClickRemoveKeyword = (e: Event) => {
   e.stopPropagation();
-  updateKeyword('');
+  updateKeyword("");
   inputRef.value?.focus();
 };
 
 const onSelectProduct = (product: ProductModel) => {
-  updateKeyword('');
-  emit('selectProduct', product);
+  updateKeyword("");
+  emit("selectProduct", product);
 };
 </script>
 
@@ -85,7 +91,7 @@ const onSelectProduct = (product: ProductModel) => {
       @input="onInputKeyword"
     />
     <button
-      v-if="keyword.length"
+      v-if="queryParams.keyword?.length"
       class="absolute z-10 right-2 w-6 h-6 flex-center rounded-full text-surface-300 hover:text-surface-400 hover:bg-surface-100"
       @click="onClickRemoveKeyword"
     >
@@ -95,7 +101,7 @@ const onSelectProduct = (product: ProductModel) => {
 
   <Menu
     ref="menu"
-    :model="menuEndState !== 'INVALID' ? data.products : []"
+    :model="menuEndState !== 'INVALID' ? products : []"
     :popup="true"
     :dt="{
       'list.padding': '0.5rem',
@@ -114,12 +120,7 @@ const onSelectProduct = (product: ProductModel) => {
         },
       }"
     >
-      <div
-        class="flex items-start gap-2"
-        v-bind="action"
-        :title="product.name"
-        @click="onSelectProduct(product)"
-      >
+      <div class="flex items-start gap-2" v-bind="action" :title="product.name" @click="onSelectProduct(product)">
         <div class="h-12 aspect-square bg-surface-200 rounded-sm flex-center">
           <Image v-if="product.imageUrl" :src="product.imageUrl" class="w-full" />
           <span v-else class="text-2xl opacity-70 capitalize">{{ product.name.charAt(0) }}</span>
@@ -140,14 +141,9 @@ const onSelectProduct = (product: ProductModel) => {
     <template #end v-if="menuEndState !== 'NONE'">
       <div class="px-2 font-semibold">
         <div class="py-4 border-t border-surface-300 flex-center">
-          <span v-if="menuEndState === 'INVALID'">
-            Enter atleast {{ MIN_VALID_KEYWORD }} characters to search
-          </span>
+          <span v-if="menuEndState === 'INVALID'">Enter atleast {{ MIN_KEYWORD_LENGTH }} characters to search</span>
           <span v-else-if="menuEndState === 'EMPTY'">No products found</span>
-          <span
-            v-else-if="menuEndState === 'LOADING'"
-            class="pi pi-spin pi-spinner text-xl opacity-70"
-          ></span>
+          <span v-else-if="menuEndState === 'LOADING'" class="pi pi-spin pi-spinner text-xl opacity-70"></span>
         </div>
       </div>
     </template>

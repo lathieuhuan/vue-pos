@@ -9,28 +9,26 @@ import type {
 } from "axios";
 // import mockApi from '@/mockBackend/mockApi';
 
-function settle(
-  resolve: (value: AxiosResponse | PromiseLike<AxiosResponse>) => void,
-  reject: (reason?: any) => void,
-  response: AxiosResponse,
-) {
-  const validateStatus = response.config.validateStatus;
-  if (!response.status || !validateStatus || validateStatus(response.status)) {
-    resolve(response);
-  } else {
-    reject(
-      new axios.AxiosError(
-        "Request failed with status code " + response.status,
-        [axios.AxiosError.ERR_BAD_REQUEST, axios.AxiosError.ERR_BAD_RESPONSE][
-          Math.floor(response.status / 100) - 4
-        ],
-        response.config,
-        response.request,
-        response,
-      ),
-    );
-  }
-}
+// function settle(
+//   resolve: (value: AxiosResponse | PromiseLike<AxiosResponse>) => void,
+//   reject: (reason?: any) => void,
+//   response: AxiosResponse,
+// ) {
+//   const validateStatus = response.config.validateStatus;
+//   if (!response.status || !validateStatus || validateStatus(response.status)) {
+//     resolve(response);
+//   } else {
+//     reject(
+//       new axios.AxiosError(
+//         "Request failed with status code " + response.status,
+//         [axios.AxiosError.ERR_BAD_REQUEST, axios.AxiosError.ERR_BAD_RESPONSE][Math.floor(response.status / 100) - 4],
+//         response.config,
+//         response.request,
+//         response,
+//       ),
+//     );
+//   }
+// }
 
 // function mockAdapter(config: InternalAxiosRequestConfig): AxiosPromise {
 //   return new Promise((resolve, reject) => {
@@ -43,6 +41,12 @@ function settle(
 //     settle(resolve, reject, response);
 //   });
 // }
+
+const delay = (call: () => Promise<AxiosResponse<any, any>>) => {
+  return new Promise<AxiosResponse<any, any>>((resolve) => {
+    setTimeout(() => resolve(call()), 1000);
+  });
+};
 
 export class BaseHttp {
   protected http: AxiosInstance;
@@ -59,10 +63,10 @@ export class BaseHttp {
   }
 
   get = (url = "", params?: AxiosRequestConfig) => {
-    return this.http.get(url, params);
+    return delay(() => this.http.get(url, params));
   };
 
   post = (url = "", data?: any, params?: AxiosRequestConfig) => {
-    return this.http.post(url, data, params);
+    return delay(() => this.http.post(url, data, params));
   };
 }
