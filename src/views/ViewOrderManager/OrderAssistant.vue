@@ -44,7 +44,7 @@ const onSelectPaymentMethod = (method: EPaymentMethod) => {
 <template>
   <div class="rounded-md border border-surface-300 overflow-hidden">
     <div class="pl-4 pr-3 py-1 bg-surface-200 flex justify-between items-center">
-      <p class="pr-2 truncate font-semibold" :title="`#${order.id}`">#{{ order.id }}</p>
+      <p class="pr-2 truncate font-semibold" :title="`#${order.code}`">#{{ order.code }}</p>
       <button class="w-7 h-7 flex-center group" title="See detail" @click="visibleDetail = true">
         <span class="rounded-full opacity-60 group-hover:bg-primary-300 group-hover:opacity-100 flex">
           <i class="pi pi-info-circle text-xl"></i>
@@ -156,17 +156,10 @@ const onSelectPaymentMethod = (method: EPaymentMethod) => {
           />
 
           <div class="py-2 space-y-4">
-            <div>
-              <p>Order Id</p>
-              <div class="flex justify-between items-start">
-                <p class="pr-2 font-semibold">#{{ order.id }}</p>
-                <div class="-mt-0.5">
-                  <StatusTag
-                    class="absolute top-3 right-4"
-                    :value="order.status"
-                    :severityMap="ORDER_STATUS_SEVERITY"
-                  />
-                </div>
+            <div class="flex justify-between items-start">
+              <p class="pr-2 font-semibold">#{{ order.code }}</p>
+              <div class="-mt-0.5">
+                <StatusTag :value="order.status" :severityMap="ORDER_STATUS_SEVERITY" />
               </div>
             </div>
 

@@ -1,13 +1,5 @@
 import axios from "axios";
-import type {
-  AxiosInstance,
-  AxiosPromise,
-  AxiosRequestConfig,
-  AxiosResponse,
-  CreateAxiosDefaults,
-  InternalAxiosRequestConfig,
-} from "axios";
-// import mockApi from '@/mockBackend/mockApi';
+import type { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, CreateAxiosDefaults } from "axios";
 
 // function settle(
 //   resolve: (value: AxiosResponse | PromiseLike<AxiosResponse>) => void,
@@ -42,9 +34,13 @@ import type {
 //   });
 // }
 
+export type ApiError = AxiosError;
+
+type ApiResponse<TResponseData> = Promise<AxiosResponse<TResponseData, ApiError>>;
+
 const delay = (call: () => Promise<AxiosResponse<any, any>>) => {
   return new Promise<AxiosResponse<any, any>>((resolve) => {
-    setTimeout(() => resolve(call()), 1000);
+    setTimeout(() => resolve(call()), 300);
   });
 };
 
@@ -62,11 +58,19 @@ export class BaseHttp {
     });
   }
 
-  get = (url = "", params?: AxiosRequestConfig) => {
-    return delay(() => this.http.get(url, params));
+  get = <TResponseData = any>(url = "", config?: AxiosRequestConfig): ApiResponse<TResponseData> => {
+    return delay(() => this.http.get(url, config));
   };
 
-  post = (url = "", data?: any, params?: AxiosRequestConfig) => {
-    return delay(() => this.http.post(url, data, params));
+  post = <TResponseData = any>(url = "", data?: any, config?: AxiosRequestConfig): ApiResponse<TResponseData> => {
+    return delay(() => this.http.post(url, data, config));
+  };
+
+  put = <TResponseData = any>(url = "", data?: any, config?: AxiosRequestConfig): ApiResponse<TResponseData> => {
+    return delay(() => this.http.put(url, data, config));
+  };
+
+  delete = <TReponseData>(url = "", config?: AxiosRequestConfig): ApiResponse<TReponseData> => {
+    return delay(() => this.http.delete(url, config));
   };
 }

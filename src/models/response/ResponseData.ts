@@ -1,4 +1,4 @@
-export type ReponseData<TData> = {
+export type ResponseData<TData> = {
   meta: {
     code: number;
     message: string;

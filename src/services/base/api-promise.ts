@@ -1,11 +1,11 @@
-import type { ReponseData } from "@/models/response/ReponseData";
-import type { ApiError } from "./base-api-service";
+import type { ResponseData } from "@/models/response/ResponseData";
+import type { ApiError } from "./base-http";
 
 export class ApiPromise<TData, TError = ApiError> {
   private onSuccess: (data: TData) => void;
   private onError: (error: TError) => void;
 
-  constructor(private _excute: () => Promise<ReponseData<TData>>) {}
+  constructor(private _excute: () => Promise<ResponseData<TData>>) {}
 
   then(onSuccess: ApiPromise<TData, TError>["onSuccess"]) {
     this.onSuccess = onSuccess;

@@ -20,14 +20,18 @@ defineProps<{
 
 const orderStore = useOrderStore();
 
-const onAddOrderItem = (product: ProductModel) => {
+const onAddItem = (product: ProductModel) => {
   orderStore.addOrderItem(orderStore.activeManagerId, product);
 };
 
 const onChangeItemQuantity = (item: OrderItemModel, quantity: number) => {
   if (quantity >= MIN_ITEM_QUANTITY && quantity <= MAX_ITEM_QUANTITY && quantity !== item.quantity) {
-    orderStore.updateOrderItemQuantity(item.product.id, quantity);
+    orderStore.updateOrderItemQuantity(orderStore.activeManagerId, item, quantity);
   }
+};
+
+const onDeleteItem = (item: OrderItemModel) => {
+  orderStore.deleteOrderItem(orderStore.activeManagerId, item);
 };
 
 const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputElement) => {
@@ -39,7 +43,7 @@ const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputEle
 <template>
   <div>
     <div>
-      <ProductSearch @selectProduct="onAddOrderItem" />
+      <ProductSearch @selectProduct="onAddItem" />
     </div>
 
     <div
@@ -64,6 +68,7 @@ const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputEle
         <div class="pr-3 justify-end no-divider">
           <p class="h-full">{{ index + 1 }}</p>
         </div>
+
         <div class="pr-3 flex justify-between">
           <div class="h-full">
             <p class="pr-2 font-semibold">{{ item.product.name }}</p>
@@ -72,13 +77,25 @@ const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputEle
           <div class="flex items-center gap-2">
             <span v-if="item.status === 'LOADING'" class="pi pi-spinner pi-spin opacity-70" />
             <span v-if="item.status === 'ERROR'" class="pi pi-exclamation-circle" style="color: var(--p-orange-500)" />
-            <Button class="p-2" severity="danger" text @click="orderStore.removeOrderItem(item)">
+            <Button
+              class="p-2"
+              severity="danger"
+              text
+              :disabled="item.status === 'LOADING'"
+              @click="onDeleteItem(item)"
+            >
               <span class="pi pi-trash"></span>
             </Button>
           </div>
         </div>
+
         <div class="px-2 flex items-center gap-2">
-          <Button class="w-7 h-7" severity="secondary" @click="onChangeItemQuantity(item, item.quantity - 1)">
+          <Button
+            class="w-7 h-7"
+            severity="secondary"
+            :disabled="item.status === 'LOADING'"
+            @click="onChangeItemQuantity(item, item.quantity - 1)"
+          >
             <span class="pi pi-minus text-sm"></span>
           </Button>
           <InputNumber
@@ -87,18 +104,27 @@ const onBlurQuantityInput = async (item: OrderItemModel, inputElmt: HTMLInputEle
             :max="MAX_ITEM_QUANTITY"
             :min="MIN_ITEM_QUANTITY"
             :allowEmpty="false"
+            :disabled="item.status === 'LOADING'"
             @input="onChangeItemQuantity(item, $event.value)"
             @blur="onBlurQuantityInput(item, $event.originalEvent.target)"
           />
-          <Button class="w-7 h-7" severity="secondary" @click="onChangeItemQuantity(item, item.quantity + 1)">
+          <Button
+            class="w-7 h-7"
+            severity="secondary"
+            :disabled="item.status === 'LOADING'"
+            @click="onChangeItemQuantity(item, item.quantity + 1)"
+          >
             <span class="pi pi-plus text-sm"></span>
           </Button>
         </div>
+
         <div class="px-2 justify-center">{{ item.product.unit }}</div>
         <div class="px-3 justify-end">{{ formatNumber(item.product.price) }}</div>
+
         <div class="px-3 justify-end no-divider">
           <span class="truncate">{{ formatNumber(item.product.price * item.quantity) }} </span>
         </div>
+
         <div class="no-divider flex items-center opacity-70">
           <div class="w-8">
             <Button

@@ -1,26 +1,77 @@
-import type { ReponseData } from "@/models/response/ReponseData";
-import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import type { ResponseData } from "@/models/response/ResponseData";
+import type { AxiosRequestConfig } from "axios";
+import type { Notifier } from "@/types/notifier";
 
 import { API_BASE_URL } from "@/constants/configs";
-import { BaseHttp } from "./base-http";
+import { BaseHttp, type ApiError } from "./base-http";
 
 const baseHttp = new BaseHttp(API_BASE_URL);
 
-export type ApiError = AxiosError;
-
-export type ApiResponse<TData> = Promise<AxiosResponse<ReponseData<TData>, ApiError>>;
-
 export abstract class BaseApiService {
-  protected abstract baseURL: string;
+  protected abstract basePath: string;
 
-  protected get = <TReponseData extends ReponseData<any> = ReponseData<any>>(
+  constructor(private notifier?: Notifier) {}
+
+  protected get = <TReponseData extends ResponseData<any> = ResponseData<any>>(
     url = "",
-    params?: AxiosRequestConfig<any>,
-  ): Promise<TReponseData> => {
-    return baseHttp.get(`${this.baseURL}${url}`, params).then((res) => res.data);
+    config?: AxiosRequestConfig<any>,
+  ) => {
+    return baseHttp
+      .get<TReponseData>(`${this.basePath}${url}`, config)
+      .then((res) => res.data)
+      .catch((error: ApiError) => {
+        this.notifier?.notify?.({
+          type: "error",
+          message: error.message,
+        });
+        throw error;
+      });
   };
 
-  protected post = <TData = any>(url = "", data?: any, params?: AxiosRequestConfig): Promise<ReponseData<TData>> => {
-    return baseHttp.post(`${this.baseURL}${url}`, data, params).then((res) => res.data);
+  protected post = <TReponseData extends ResponseData<any> = ResponseData<any>>(
+    url = "",
+    data?: any,
+    config?: AxiosRequestConfig,
+  ) => {
+    return baseHttp
+      .post<TReponseData>(`${this.basePath}${url}`, data, config)
+      .then((res) => res.data)
+      .catch((error: ApiError) => {
+        this.notifier?.notify?.({
+          type: "error",
+          message: error.message,
+        });
+        throw error;
+      });
+  };
+
+  protected put = <TReponseData extends ResponseData<any> = ResponseData<any>>(
+    url = "",
+    data?: any,
+    config?: AxiosRequestConfig,
+  ) => {
+    return baseHttp
+      .put<TReponseData>(`${this.basePath}${url}`, data, config)
+      .then((res) => res.data)
+      .catch((error: ApiError) => {
+        this.notifier?.notify?.({
+          type: "error",
+          message: error.message,
+        });
+        throw error;
+      });
+  };
+
+  protected delete = (url = "", config?: AxiosRequestConfig) => {
+    return baseHttp
+      .delete<null>(`${this.basePath}${url}`, config)
+      .then((res) => res.data)
+      .catch((error: ApiError) => {
+        this.notifier?.notify?.({
+          type: "error",
+          message: error.message,
+        });
+        throw error;
+      });
   };
 }

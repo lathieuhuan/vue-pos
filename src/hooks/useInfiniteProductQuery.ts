@@ -1,7 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/vue-query";
 import { computed, toRef, type Reactive } from "vue";
 
-// import products from "@/data/products";
 import type { ProductModel } from "@/models/product.model";
 import type { ProductQueryParams } from "@/models/request/ProductQueryParams";
 

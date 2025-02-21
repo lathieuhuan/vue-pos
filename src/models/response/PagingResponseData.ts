@@ -1,6 +1,6 @@
-import type { ReponseData } from "./ReponseData";
+import type { ResponseData } from "./ResponseData";
 
-export type PagingRepsonseData<TData = any> = ReponseData<{
+export type PagingResponseData<TData = any> = ResponseData<{
   content: TData[];
   number: number;
   size: number;

@@ -12,47 +12,13 @@ import { OrderService } from "@/services/order-service";
 // import { formatDate } from "@/utils";
 // import { useAccountStore } from "../account.store";
 import { useNotifier } from "@/hooks/useNotifier";
-
-class Chaining<TObj> {
-  constructor(private value: TObj | undefined) {}
-
-  then = <TResult>(onSuccess: (value: TObj) => TResult, onError?: () => void): Chaining<TResult> => {
-    let result: TResult | undefined;
-
-    if (this.value) {
-      result = onSuccess(this.value);
-    } else {
-      onError?.();
-    }
-    return new Chaining(result);
-  };
-
-  set = <TKey extends keyof TObj>(key: TKey, value: TObj[TKey]) => {
-    if (this.value) Object.assign(this.value, { [key]: value });
-  };
-
-  valueOf = () => {
-    return this.value;
-  };
-
-  pipe = <K>(callback: (value: TObj) => K | Chaining<K>) => {
-    if (this.value) {
-      const converted = callback(this.value);
-      return new Chaining(converted instanceof Chaining ? converted.value : converted);
-    }
-    return undefined;
-  };
-}
-
-const getOrderItem = (productId: string) => (order: OrderModel) => {
-  const item = order.items.find((item) => item.product.id === productId);
-  return new Chaining(item ? { order, item } : undefined);
-};
+import { Chain } from "@/utils/Chain";
+import { Object_ } from "@/utils/Object_";
 
 export const useOrderStore = defineStore("order", () => {
-  const apiService = new OrderService();
-
   const notifier = useNotifier();
+  const apiService = new OrderService(notifier);
+
   // const accountStore = useAccountStore();
   const orderManagers = reactive<OrderManager[]>([]);
   /** manager id */
@@ -62,10 +28,6 @@ export const useOrderStore = defineStore("order", () => {
   const activeManager = computed<OrderManager | undefined>(() => {
     return orderManagers.find((manager) => manager.id === activeId.value);
   });
-
-  // const activeOrder = computed<OrderModel | undefined>(() => {
-  //   return activeManager?.value?.order;
-  // });
 
   function getNextOrderName() {
     const takenNums = new Set<number>([0]);
@@ -80,23 +42,6 @@ export const useOrderStore = defineStore("order", () => {
     return `Order ${Math.max(...takenNums) + 1}`;
   }
 
-  const getManager = (managerId: string) => {
-    return new Chaining<OrderManager>(orderManagers.find((manager) => manager.id === managerId));
-  };
-
-  const getOrder = (managerId: string) => {
-    return getManager(managerId).then((manager) => manager.order);
-  };
-
-  function selectOrder(manager: string | { id: string }) {
-    const managerId = typeof manager === "string" ? manager : manager.id;
-    activeId.value = managerId;
-  }
-
-  function updateOrder(data: Partial<OrderModel>, managerId: string) {
-    getOrder(managerId).then((order) => order && Object.assign(order, data));
-  }
-
   function createManager(initInfo?: Partial<OrderManagerInfo>): OrderManager {
     const { id = crypto.randomUUID(), name = getNextOrderName(), isLoading = false } = initInfo || {};
     return {
@@ -106,27 +51,30 @@ export const useOrderStore = defineStore("order", () => {
     };
   }
 
-  // function addOrder(manager?: Partial<OrderManagerInfo>, order?: OrderModel) {
-  //   const { id = crypto.randomUUID(), name = getNextOrderName(), isLoading = false } = manager || {};
+  // ===== ENTITY GETTERs =====
 
-  //   const newOrder: OrderModel = {
-  //     status: EOrderStatus.from("PROCESSING"),
-  //     handler: accountStore.account.staff,
-  //     customer: null,
-  //     createdAt: formatDate(new Date()),
-  //     items: [],
-  //     ...orderInit,
-  //     id: orderInit?.id || crypto.randomUUID(),
-  //     paymentMethod: EPaymentMethod.from("CASH"),
-  //   };
+  const getManager = (managerId: string) => {
+    return new Chain<OrderManager>(orderManagers.find((manager) => manager.id === managerId));
+  };
 
-  //   orderManagers.push({
-  //     id,
-  //     name,
-  //     isLoading,
-  //     order,
-  //   });
-  // }
+  const getOrder = (managerId: string) => {
+    return getManager(managerId).then((manager) => manager.order);
+  };
+
+  const getOrderItem = (order: OrderModel, productId: ProductModel["id"]) => {
+    return new Chain(order.items.find((item) => item.product.id === productId));
+  };
+
+  // ===== ACTIONS =====
+
+  function selectOrder(manager: string | { id: string }) {
+    const managerId = typeof manager === "string" ? manager : manager.id;
+    activeId.value = managerId;
+  }
+
+  function updateOrder(data: Partial<OrderModel>, managerId: string) {
+    getOrder(managerId).then((order) => order && Object.assign(order, data));
+  }
 
   function addNewOrder() {
     const managerId = crypto.randomUUID();
@@ -142,42 +90,65 @@ export const useOrderStore = defineStore("order", () => {
       .then((data) => {
         manager.set("order", plainToInstance(OrderModel, data.data));
       })
-      .catch((err) => {
-        notifier.notify({
-          type: "error",
-          message: err.message,
-        });
-      })
       .finally(() => manager.set("isLoading", false));
   }
 
   function addOrderItem(managerId: string, product: ProductModel) {
-    const order = getOrder(managerId).valueOf();
+    const order = getOrder(managerId).getValue();
 
     if (order) {
       order.items.push({
         product,
-        quantity: 1,
+        quantity: 0,
         status: "LOADING",
       });
 
-      apiService.addOrderItem(order.id, product.id).then((data) => console.log(data.data));
+      apiService
+        .addOrderItem(order.code, product.id)
+        .then((data) => {
+          getOrderItem(order, product.id).then((item) => Object_.assign(item, data.data, { status: "IDLE" }));
+        })
+        .catch(() => {
+          getOrderItem(order, product.id).set("status", "ERROR");
+        });
     }
   }
 
-  function updateOrderItemQuantity(productId: string, newQuantity: number, orderId?: OrderModel["id"]) {
-    // apiService.addOrderItem();
-    // getOrder(orderId)
-    //   .pipe(getOrderItem(productId))
-    //   ?.then(({ item }) => {
-    //     clearTimeout(timeoutProductUpdateMap.get(productId));
-    //     item.quantity = newQuantity;
-    //     item.status = "LOADING";
-    //     const timeoutId = setTimeout(() => {
-    //       item.status = "SUCCESS";
-    //     }, 500);
-    //     timeoutProductUpdateMap.set(productId, timeoutId);
-    //   });
+  function updateOrderItemQuantity(managerId: string, item: OrderItemModel, newQuantity: number) {
+    const order = getOrder(managerId).getValue();
+
+    if (order) {
+      const productId = item.product.id;
+      getOrderItem(order, productId).set("status", "LOADING");
+
+      apiService
+        .updateOrderItemQuantity(order.code, productId, newQuantity)
+        .then((data) => {
+          getOrderItem(order, productId).then((item) => Object_.assign(item, data.data));
+        })
+        .finally(() => {
+          getOrderItem(order, productId).set("status", "IDLE");
+        });
+    }
+  }
+
+  function deleteOrderItem(managerId: string, item: OrderItemModel) {
+    const order = getOrder(managerId).getValue();
+
+    if (order) {
+      const productId = item.product.id;
+
+      getOrderItem(order, productId).set("status", "LOADING");
+
+      apiService
+        .deleteOrderItem(order.code, productId)
+        .then(() => {
+          order.items = order.items.filter((item) => item.product.id !== productId);
+        })
+        .finally(() => {
+          getOrderItem(order, productId).set("status", "IDLE");
+        });
+    }
   }
 
   function removeOrder(removedManager: OrderManager) {
@@ -186,21 +157,6 @@ export const useOrderStore = defineStore("order", () => {
     if (removedIndex !== -1) {
       orderManagers.splice(removedIndex, 1);
     }
-  }
-
-  function removeOrderItem({ product }: OrderItemModel, orderId?: string) {
-    // getOrder(orderId)
-    //   .pipe(getOrderItem(product.id))
-    //   ?.then(({ item, order }) => {
-    //     clearTimeout(timeoutProductUpdateMap.get(product.id));
-    //     if (item.status !== "ERROR") {
-    //       item.status = "LOADING";
-    //     }
-    //     const timeout = setTimeout(() => {
-    //       order.items = order.items.filter((item) => item.product.id !== product.id);
-    //     }, 500);
-    //     timeoutProductUpdateMap.set(product.id, timeout);
-    //   });
   }
 
   return {
@@ -214,6 +170,6 @@ export const useOrderStore = defineStore("order", () => {
     updateOrder,
     addOrderItem,
     updateOrderItemQuantity,
-    removeOrderItem,
+    deleteOrderItem,
   };
 });
