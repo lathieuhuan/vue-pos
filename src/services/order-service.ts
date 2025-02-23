@@ -11,15 +11,19 @@ export class OrderService extends BaseApiService {
     return this.post<ResponseData<OrderModel>>("");
   }
 
-  addOrderItem(orderCode: OrderModel["code"], productId: ProductModel["id"]) {
-    return this.post<ResponseData<OrderItemModel>>(`/${orderCode}/items`, { productId });
+  deleteOrder(orderCode: OrderModel["code"]) {
+    return this.delete(`/${orderCode}`);
   }
 
-  updateOrderItemQuantity(orderCode: OrderModel["code"], productId: ProductModel["id"], quantity: number) {
-    return this.put<ResponseData<OrderItemModel>>(`/${orderCode}/items/${productId}`, { quantity });
+  addOrderItem(orderCode: OrderModel["code"], productCode: ProductModel["code"]) {
+    return this.post<ResponseData<OrderItemModel>>(`/${orderCode}/items`, { productCode });
   }
 
-  deleteOrderItem(orderCode: OrderModel["code"], productId: ProductModel["id"]) {
-    return this.delete(`/${orderCode}/items/${productId}`);
+  updateOrderItemQuantity(orderCode: OrderModel["code"], productCode: ProductModel["code"], quantity: number) {
+    return this.put<ResponseData<OrderItemModel>>(`/${orderCode}/items/${productCode}`, { quantity });
+  }
+
+  deleteOrderItem(orderCode: OrderModel["code"], productCode: ProductModel["code"]) {
+    return this.delete(`/${orderCode}/items/${productCode}`);
   }
 }

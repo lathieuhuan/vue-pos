@@ -4,14 +4,14 @@ import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import Tag from "primevue/tag";
 
-import type { OrderModel } from "@/models/order.model";
-import { ORDER_STATUS_SEVERITY } from "@/components/tags/tags.config";
+import { ORDER_STATUS_SEVERITY } from "@/components-app/tags/tags.config";
 import EPaymentMethod from "@/constants/enums/EPaymentMethod";
+import type { OrderModel } from "@/models/order.model";
 import { formatNumber } from "@/utils";
 import { Options } from "@/utils/Options";
 
-import InputNumber from "@/components/InputNumber/InputNumber.vue";
-import StatusTag from "@/components/tags/StatusTag.vue";
+import StatusTag from "@/components-app/tags/StatusTag.vue";
+import InputNumber from "@/components-lib/InputNumber/InputNumber.vue";
 
 const props = defineProps<{
   order: DeepReadonly<OrderModel>;

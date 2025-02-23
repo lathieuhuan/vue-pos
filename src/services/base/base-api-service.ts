@@ -12,6 +12,11 @@ export abstract class BaseApiService {
 
   constructor(private notifier?: Notifier) {}
 
+  public delay = (delay: number) => {
+    baseHttp.delayTime = delay;
+    return this;
+  };
+
   protected get = <TReponseData extends ResponseData<any> = ResponseData<any>>(
     url = "",
     config?: AxiosRequestConfig<any>,

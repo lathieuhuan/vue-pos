@@ -21,10 +21,20 @@ export type OrderItemModel = {
 // };
 
 export class OrderModel {
+  constructor(
+    public name: string,
+    public id: string = crypto.randomUUID(),
+    public isLoading = false,
+  ) {}
+
+  get isLoadingAnyItem() {
+    return this.items?.some((item) => item.status === "LOADING");
+  }
+
   code: string;
 
   @Transform(Enum.transformTo(EOrderStatus))
-  status?: EOrderStatus;
+  status: EOrderStatus;
 
   items: OrderItemModel[];
   handler: StaffModel = {

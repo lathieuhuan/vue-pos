@@ -5,6 +5,7 @@ import TabItem, { type TabItemProps } from "./TabItem.vue";
 export type TabBarItem = {
   key: string;
   label: string;
+  disabled?: boolean;
 };
 
 export type TabsBarProps<TItem extends TabBarItem = TabBarItem> = {
@@ -70,7 +71,11 @@ const renderedItems = computed(() => {
               </div>
               <span v-else class="font-medium">{{ tabItem.label }}</span>
               <button
-                :class="['p-1 rounded-full flex', tabProps.isActive ? 'hover:bg-surface-200' : 'hover:bg-surface-400']"
+                :class="[
+                  'p-1 rounded-full flex',
+                  !tabItem.disabled && (tabProps.isActive ? 'hover:bg-surface-200' : 'hover:bg-surface-400'),
+                ]"
+                :disabled="tabItem.disabled"
                 @click="
                   (e) => {
                     e.stopPropagation();

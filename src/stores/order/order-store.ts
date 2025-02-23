@@ -3,13 +3,9 @@ import { defineStore } from "pinia";
 import { computed, reactive, ref, type DeepReadonly } from "vue";
 
 import type { ProductModel } from "@/models/product.model";
-import type { OrderManager, OrderManagerInfo } from "./order-store.types";
 
 import { OrderModel, type OrderItemModel } from "@/models/order.model";
-// import EOrderStatus from "@/constants/enums/EOrderStatus";
-// import EPaymentMethod from "@/constants/enums/EPaymentMethod";
 import { OrderService } from "@/services/order-service";
-// import { formatDate } from "@/utils";
 // import { useAccountStore } from "../account.store";
 import { useNotifier } from "@/hooks/useNotifier";
 import { Chain } from "@/utils/Chain";
@@ -20,20 +16,18 @@ export const useOrderStore = defineStore("order", () => {
   const apiService = new OrderService(notifier);
 
   // const accountStore = useAccountStore();
-  const orderManagers = reactive<OrderManager[]>([]);
-  /** manager id */
+  const orders = reactive<OrderModel[]>([]);
   const activeId = ref("");
-  const timeoutProductUpdateMap = new Map<string, number>();
 
-  const activeManager = computed<OrderManager | undefined>(() => {
-    return orderManagers.find((manager) => manager.id === activeId.value);
+  const activeOrder = computed<OrderModel | undefined>(() => {
+    return orders.find((order) => order.id === activeId.value);
   });
 
   function getNextOrderName() {
     const takenNums = new Set<number>([0]);
 
-    for (const manager of orderManagers) {
-      const [, orderNum] = manager.name.split(" ");
+    for (const order of orders) {
+      const [, orderNum] = order.name.split(" ");
 
       if (!isNaN(+orderNum)) {
         takenNums.add(+orderNum);
@@ -42,59 +36,48 @@ export const useOrderStore = defineStore("order", () => {
     return `Order ${Math.max(...takenNums) + 1}`;
   }
 
-  function createManager(initInfo?: Partial<OrderManagerInfo>): OrderManager {
-    const { id = crypto.randomUUID(), name = getNextOrderName(), isLoading = false } = initInfo || {};
-    return {
-      id,
-      name,
-      isLoading,
-    };
-  }
-
   // ===== ENTITY GETTERs =====
 
-  const getManager = (managerId: string) => {
-    return new Chain<OrderManager>(orderManagers.find((manager) => manager.id === managerId));
+  const getOrder = (orderId: string) => {
+    return new Chain(orders.find((order) => order.id === orderId));
   };
 
-  const getOrder = (managerId: string) => {
-    return getManager(managerId).then((manager) => manager.order);
-  };
-
-  const getOrderItem = (order: OrderModel, productId: ProductModel["id"]) => {
-    return new Chain(order.items.find((item) => item.product.id === productId));
+  const getOrderItem = (order: OrderModel | Chain<OrderModel>, productCode: ProductModel["code"]) => {
+    const _order = order instanceof Chain ? order.getValue() : order;
+    return new Chain(_order?.items.find((item) => item.product.code === productCode));
   };
 
   // ===== ACTIONS =====
 
-  function selectOrder(manager: string | { id: string }) {
-    const managerId = typeof manager === "string" ? manager : manager.id;
-    activeId.value = managerId;
-  }
-
-  function updateOrder(data: Partial<OrderModel>, managerId: string) {
-    getOrder(managerId).then((order) => order && Object.assign(order, data));
+  function selectOrder(order: string | { id: string }) {
+    activeId.value = typeof order === "string" ? order : order.id;
   }
 
   function addNewOrder() {
-    const managerId = crypto.randomUUID();
+    const newOrder = new OrderModel(getNextOrderName());
 
-    orderManagers.push(createManager({ id: managerId, isLoading: true }));
+    newOrder.isLoading = true;
+    orders.push(newOrder);
+    selectOrder(newOrder);
 
-    selectOrder(managerId);
-
-    const manager = getManager(managerId);
+    const savedOrder = getOrder(newOrder.id);
 
     apiService
       .createOrder()
       .then((data) => {
-        manager.set("order", plainToInstance(OrderModel, data.data));
+        savedOrder.then((order) => {
+          const reservedData: Partial<OrderModel> = {
+            id: order.id,
+            name: order.name,
+          };
+          Object.assign(order, plainToInstance(OrderModel, data.data), reservedData);
+        });
       })
-      .finally(() => manager.set("isLoading", false));
+      .finally(() => savedOrder.set("isLoading", false));
   }
 
-  function addOrderItem(managerId: string, product: ProductModel) {
-    const order = getOrder(managerId).getValue();
+  function addOrderItem(orderId: string, product: ProductModel) {
+    const order = getOrder(orderId).getValue();
 
     if (order) {
       order.items.push({
@@ -104,68 +87,81 @@ export const useOrderStore = defineStore("order", () => {
       });
 
       apiService
-        .addOrderItem(order.code, product.id)
+        .addOrderItem(order.code, product.code)
         .then((data) => {
-          getOrderItem(order, product.id).then((item) => Object_.assign(item, data.data, { status: "IDLE" }));
+          getOrderItem(order, product.code).then((item) => Object_.assign(item, data.data, { status: "IDLE" }));
         })
         .catch(() => {
-          getOrderItem(order, product.id).set("status", "ERROR");
+          getOrderItem(order, product.code).set("status", "ERROR");
         });
     }
   }
 
-  function updateOrderItemQuantity(managerId: string, item: OrderItemModel, newQuantity: number) {
-    const order = getOrder(managerId).getValue();
+  function updateOrderItemQuantity(orderId: string, item: OrderItemModel, newQuantity: number) {
+    const productCode = item.product.code;
+    const order = getOrder(orderId);
+    const orderItem = getOrderItem(order, productCode);
 
-    if (order) {
-      const productId = item.product.id;
-      getOrderItem(order, productId).set("status", "LOADING");
+    orderItem.set("status", "LOADING");
+    orderItem.set("quantity", newQuantity);
 
+    order.then((order) => {
       apiService
-        .updateOrderItemQuantity(order.code, productId, newQuantity)
+        .updateOrderItemQuantity(order.code, productCode, newQuantity)
         .then((data) => {
-          getOrderItem(order, productId).then((item) => Object_.assign(item, data.data));
+          orderItem.then((item) => Object_.assign(item, data.data));
         })
         .finally(() => {
-          getOrderItem(order, productId).set("status", "IDLE");
+          orderItem.set("status", "IDLE");
         });
-    }
+    });
   }
 
-  function deleteOrderItem(managerId: string, item: OrderItemModel) {
-    const order = getOrder(managerId).getValue();
+  function deleteOrderItem(orderId: string, item: OrderItemModel) {
+    const order = getOrder(orderId).getValue();
 
     if (order) {
-      const productId = item.product.id;
+      const productCode = item.product.code;
 
-      getOrderItem(order, productId).set("status", "LOADING");
+      getOrderItem(order, productCode).set("status", "LOADING");
 
       apiService
-        .deleteOrderItem(order.code, productId)
+        .deleteOrderItem(order.code, productCode)
         .then(() => {
-          order.items = order.items.filter((item) => item.product.id !== productId);
+          order.items = order.items.filter((item) => item.product.code !== productCode);
         })
         .finally(() => {
-          getOrderItem(order, productId).set("status", "IDLE");
+          getOrderItem(order, productCode).set("status", "IDLE");
         });
     }
   }
 
-  function removeOrder(removedManager: OrderManager) {
-    const removedIndex = orderManagers.findIndex((manager) => manager.id === removedManager.id);
+  async function deleteOrder(removedOrder: OrderModel) {
+    const removedIndex = orders.findIndex((order) => order.id === removedOrder.id);
 
-    if (removedIndex !== -1) {
-      orderManagers.splice(removedIndex, 1);
+    // Delete PROCESSING order for learning purpose
+    if (removedOrder.status.is("PROCESSING")) {
+      removedOrder.isLoading = true;
+
+      await apiService.deleteOrder(removedOrder.code).catch(() => {
+        removedOrder.isLoading = false;
+      });
     }
+    if (removedIndex !== -1) {
+      orders.splice(removedIndex, 1);
+    }
+  }
+
+  function updateOrder(data: Partial<OrderModel>, orderId: string) {
+    getOrder(orderId).then((order) => order && Object.assign(order, data));
   }
 
   return {
-    orderManagers,
-    activeManagerId: activeId,
-    activeManager: activeManager as DeepReadonly<typeof activeManager>,
-    // activeOrder: activeOrder as DeepReadonly<typeof activeOrder>,
+    orders,
+    activeOrderId: activeId,
+    activeOrder: activeOrder as DeepReadonly<typeof activeOrder>,
     addNewOrder,
-    removeOrder,
+    deleteOrder,
     selectOrder,
     updateOrder,
     addOrderItem,

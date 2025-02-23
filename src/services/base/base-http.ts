@@ -38,14 +38,10 @@ export type ApiError = AxiosError;
 
 type ApiResponse<TResponseData> = Promise<AxiosResponse<TResponseData, ApiError>>;
 
-const delay = (call: () => Promise<AxiosResponse<any, any>>) => {
-  return new Promise<AxiosResponse<any, any>>((resolve) => {
-    setTimeout(() => resolve(call()), 300);
-  });
-};
-
 export class BaseHttp {
+  private readonly DEFAULT_DELAY = 300;
   protected http: AxiosInstance;
+  public delayTime = this.DEFAULT_DELAY;
 
   constructor(baseURL: string, headers?: CreateAxiosDefaults["headers"]) {
     this.http = axios.create({
@@ -56,21 +52,32 @@ export class BaseHttp {
       },
       // adapter: mockAdapter,
     });
+
+    this.http.interceptors.request.use((config) => {
+      this.delayTime = this.DEFAULT_DELAY;
+      return config;
+    });
   }
 
+  private delay = (call: () => Promise<AxiosResponse<any, any>>) => {
+    return new Promise<AxiosResponse<any, any>>((resolve) => {
+      setTimeout(() => resolve(call()), this.delayTime);
+    });
+  };
+
   get = <TResponseData = any>(url = "", config?: AxiosRequestConfig): ApiResponse<TResponseData> => {
-    return delay(() => this.http.get(url, config));
+    return this.delay(() => this.http.get(url, config));
   };
 
   post = <TResponseData = any>(url = "", data?: any, config?: AxiosRequestConfig): ApiResponse<TResponseData> => {
-    return delay(() => this.http.post(url, data, config));
+    return this.delay(() => this.http.post(url, data, config));
   };
 
   put = <TResponseData = any>(url = "", data?: any, config?: AxiosRequestConfig): ApiResponse<TResponseData> => {
-    return delay(() => this.http.put(url, data, config));
+    return this.delay(() => this.http.put(url, data, config));
   };
 
   delete = <TReponseData>(url = "", config?: AxiosRequestConfig): ApiResponse<TReponseData> => {
-    return delay(() => this.http.delete(url, config));
+    return this.delay(() => this.http.delete(url, config));
   };
 }
