@@ -1,13 +1,14 @@
 import { Transform } from "class-transformer";
 
-import type { CustomerModel } from "./customer.model";
 import type { ProductModel } from "./product.model";
 import type { StaffModel } from "./staff.model";
 
 import { Enum } from "@/constants/enums";
+import ECustomerCategory from "@/constants/enums/ECustomerCategory";
 import EOrderStatus from "@/constants/enums/EOrderStatus";
 import EPaymentMethod from "@/constants/enums/EPaymentMethod";
 import { formatDate } from "@/utils";
+import type { MemberModel } from "./member.model";
 
 export type OrderItemStatus = "IDLE" | "LOADING" | "ERROR";
 
@@ -41,13 +42,17 @@ export class OrderModel {
     id: "1",
     name: "Staff",
   };
-  customer: CustomerModel | null = null;
+
+  @Transform(Enum.transformTo(ECustomerCategory))
+  customerCategory: ECustomerCategory;
+
+  customer?: MemberModel;
 
   @Transform(({ value }) => formatDate(new Date(value)))
   createdAt: string;
 
   @Transform(Enum.transformTo(EPaymentMethod))
-  paymentMethod?: EPaymentMethod;
+  paymentMethod: EPaymentMethod;
 
   // paymentInfo: OrderPaymentInfo;
 }

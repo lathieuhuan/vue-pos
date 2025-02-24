@@ -1,5 +1,4 @@
 import type { ProductModel } from "@/models/product.model";
-
 import type { PagingQueryParams } from "@/models/request/PagingQueryParams";
 import type { ProductQueryParams } from "@/models/request/ProductQueryParams";
 import type { PagingResponseData } from "@/models/response/PagingResponseData";

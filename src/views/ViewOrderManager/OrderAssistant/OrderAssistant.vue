@@ -12,6 +12,7 @@ import { Options } from "@/utils/Options";
 
 import StatusTag from "@/components-app/tags/StatusTag.vue";
 import InputNumber from "@/components-lib/InputNumber/InputNumber.vue";
+import ControlCustomer from "./ControlCustomer.vue";
 
 const props = defineProps<{
   order: DeepReadonly<OrderModel>;
@@ -62,9 +63,8 @@ const onSelectPaymentMethod = (method: EPaymentMethod) => {
             {{ order.handler.name + (order.handler.id ? ` (${order.handler.id})` : "") }}
           </span>
         </p>
-        <div>
-          <span>Customer</span>
-        </div>
+
+        <ControlCustomer :customer-category="order.customerCategory" :member="order.customer" />
       </div>
 
       <div class="py-3 border-t border-surface-200 space-y-1">

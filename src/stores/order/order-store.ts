@@ -10,6 +10,8 @@ import { OrderService } from "@/services/order-service";
 import { useNotifier } from "@/hooks/useNotifier";
 import { Chain } from "@/utils/Chain";
 import { Object_ } from "@/utils/Object_";
+import EPaymentMethod from "@/constants/enums/EPaymentMethod";
+import ECustomerCategory from "@/constants/enums/ECustomerCategory";
 
 export const useOrderStore = defineStore("order", () => {
   const notifier = useNotifier();
@@ -66,11 +68,16 @@ export const useOrderStore = defineStore("order", () => {
       .createOrder()
       .then((data) => {
         savedOrder.then((order) => {
+          const defaultData: Partial<OrderModel> = {
+            customerCategory: ECustomerCategory.from("WALKIN"),
+            paymentMethod: EPaymentMethod.from("CASH"),
+          };
           const reservedData: Partial<OrderModel> = {
             id: order.id,
             name: order.name,
           };
-          Object.assign(order, plainToInstance(OrderModel, data.data), reservedData);
+
+          Object.assign(order, plainToInstance(OrderModel, data.data), defaultData, reservedData);
         });
       })
       .finally(() => savedOrder.set("isLoading", false));

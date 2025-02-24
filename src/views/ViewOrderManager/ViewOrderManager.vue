@@ -7,7 +7,7 @@ import { useOrderStore } from "@/stores/order";
 // Component
 import TabsBar, { type TabBarItem } from "@/components-lib/TabsBar/TabsBar.vue";
 import OrderCart from "./OrderCart/OrderCart.vue";
-import OrderAssistant from "./OrderAssistant.vue";
+import OrderAssistant from "./OrderAssistant/OrderAssistant.vue";
 
 type OrderTabItem = TabBarItem & {
   order: OrderModel;
