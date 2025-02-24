@@ -23,12 +23,12 @@ defineEmits<{
     <div
       :class="{
         'bg-surface-0 rounded-lg': isActive,
-        'bg-surface-200 ring-[6px] ring-surface-200': !isActive,
+        'bg-surface-300 ring-[6px] ring-surface-300': !isActive,
         'rounded-br-lg': isLeftOfActive,
         'rounded-bl-lg': isRightOfActive,
       }"
     >
-      <component :is="contentIs" :class="[contentCls, !isActive && 'hover:bg-surface-300']" @click="$emit('click')">
+      <component :is="contentIs" :class="[contentCls, !isActive && 'hover:bg-surface-200']" @click="$emit('click')">
         <slot name="item"></slot>
       </component>
     </div>

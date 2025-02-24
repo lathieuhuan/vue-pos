@@ -51,7 +51,7 @@ const renderedItems = computed(() => {
 
 <template>
   <div class="pb-2 bg-surface-0">
-    <div class="flex bg-surface-200">
+    <div class="flex bg-surface-300">
       <div class="relative">
         <div class="absolute top-0 left-0 w-full h-full grid grid-rows-2">
           <div></div>
@@ -73,7 +73,8 @@ const renderedItems = computed(() => {
               <button
                 :class="[
                   'p-1 rounded-full flex',
-                  !tabItem.disabled && (tabProps.isActive ? 'hover:bg-surface-200' : 'hover:bg-surface-400'),
+                  // !tabItem.disabled && (tabProps.isActive ? 'hover:bg-surface-200' : 'hover:bg-surface-400'),
+                  !tabItem.disabled && 'hover:bg-danger-100',
                 ]"
                 :disabled="tabItem.disabled"
                 @click="
