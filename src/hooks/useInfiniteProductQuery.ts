@@ -12,9 +12,10 @@ export const MIN_KEYWORD_LENGTH = 1;
 export function useInfiniteProductQuery(params: Reactive<ProductQueryParams>) {
   const apiService = new ProductService();
   const enabled = computed(() => Boolean(params.keyword && params.keyword.length >= MIN_KEYWORD_LENGTH));
+  const keyword = computed(() => params.keyword);
 
   const query = useInfiniteQuery({
-    queryKey: ["products", params.keyword],
+    queryKey: ["products", keyword],
     queryFn: ({ pageParam }) => {
       //
       return apiService.searchProducts(params, {

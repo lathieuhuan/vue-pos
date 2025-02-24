@@ -6,7 +6,7 @@ import Menu, { type MenuMethods } from "primevue/menu";
 import type { ProductModel } from "@/models/product.model";
 import type { ProductQueryParams } from "@/models/request/ProductQueryParams";
 
-import { MIN_KEYWORD_LENGTH, useInfiniteProductQuery } from "@/hooks/useInfiniteProductQuery";
+import { MIN_KEYWORD_LENGTH, useProductQuery } from "@/hooks/useProductQuery";
 import { formatNumber } from "@/utils";
 
 type MenuEndState = "INVALID" | "EMPTY" | "LOADING" | "NONE" | "FETCH_MORE";
@@ -16,7 +16,7 @@ const emit = defineEmits<{
 }>();
 
 const queryParams = reactive<ProductQueryParams>({});
-const { isLoading, data: products } = useInfiniteProductQuery(queryParams);
+const { isLoading, data: products } = useProductQuery(queryParams);
 
 // watch(products, () => {
 //   console.log(products.value);
@@ -38,7 +38,7 @@ const menuEndState = computed<MenuEndState>(() => {
   // if (canFetchMore) {
   //   return "FETCH_MORE"
   // }
-  if (!products.value.length) {
+  if (!products.value?.length) {
     return "EMPTY";
   }
   return "NONE";
