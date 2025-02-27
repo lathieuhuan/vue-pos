@@ -9,7 +9,7 @@ import { OrderService } from "@/services/order-service";
 // import { useAccountStore } from "../account.store";
 import { useNotifier } from "@/hooks/useNotifier";
 import { Chain } from "@/utils/Chain";
-import { Object_ } from "@/utils/Object_";
+import { PlainObject } from "@/utils/PlainObject";
 import EPaymentMethod from "@/constants/enums/EPaymentMethod";
 import ECustomerCategory from "@/constants/enums/ECustomerCategory";
 
@@ -80,7 +80,14 @@ export const useOrderStore = defineStore("order", () => {
           Object.assign(order, plainToInstance(OrderModel, data.data), defaultData, reservedData);
         });
       })
-      .finally(() => savedOrder.set("isLoading", false));
+      .catch(() => {
+        savedOrder.then((order) => {
+          const removedIndex = orders.findIndex((item) => item.id === order.id);
+          if (removedIndex !== -1) {
+            orders.splice(removedIndex, 1);
+          }
+        });
+      });
   }
 
   function addOrderItem(orderId: string, product: ProductModel) {
@@ -96,7 +103,7 @@ export const useOrderStore = defineStore("order", () => {
       apiService
         .addOrderItem(order.code, product.code)
         .then((data) => {
-          getOrderItem(order, product.code).then((item) => Object_.assign(item, data.data, { status: "IDLE" }));
+          getOrderItem(order, product.code).then((item) => PlainObject.assign(item, data.data, { status: "IDLE" }));
         })
         .catch(() => {
           getOrderItem(order, product.code).set("status", "ERROR");
@@ -116,7 +123,7 @@ export const useOrderStore = defineStore("order", () => {
       apiService
         .updateOrderItemQuantity(order.code, productCode, newQuantity)
         .then((data) => {
-          orderItem.then((item) => Object_.assign(item, data.data));
+          orderItem.then((item) => PlainObject.assign(item, data.data));
         })
         .finally(() => {
           orderItem.set("status", "IDLE");
@@ -166,7 +173,7 @@ export const useOrderStore = defineStore("order", () => {
   return {
     orders,
     activeOrderId: activeId,
-    activeOrder: activeOrder as DeepReadonly<typeof activeOrder>,
+    activeOrder,
     addNewOrder,
     deleteOrder,
     selectOrder,

@@ -25,9 +25,9 @@ const menuItems = computed(() => {
   return items;
 });
 
-const onUpdateActiveOrder = (data: Partial<OrderModel>) => {
-  orderStore.updateOrder(data, orderStore.activeOrderId);
-};
+const loadedOrder = computed(() => {
+  return orderStore.activeOrder && !orderStore.activeOrder.isLoading ? orderStore.activeOrder : undefined;
+});
 </script>
 
 <template>
@@ -51,14 +51,10 @@ const onUpdateActiveOrder = (data: Partial<OrderModel>) => {
 
     <div class="p-4 flex gap-4 grow relative">
       <div class="grow">
-        <OrderCart v-if="orderStore.activeOrder" :items="orderStore.activeOrder.items" />
+        <OrderCart v-if="loadedOrder" :order="loadedOrder" />
       </div>
       <div style="width: 28rem; min-width: 20rem; max-width: 30%">
-        <OrderAssistant
-          v-if="orderStore.activeOrder && !orderStore.activeOrder.isLoading"
-          :order="orderStore.activeOrder"
-          @updateOrder="onUpdateActiveOrder"
-        />
+        <OrderAssistant v-if="loadedOrder" :order="loadedOrder" />
       </div>
 
       <div v-if="orderStore.activeOrder?.isLoading" class="absolute full-stretch flex-center">

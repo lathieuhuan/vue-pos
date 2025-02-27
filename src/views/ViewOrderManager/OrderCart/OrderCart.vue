@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { type DeepReadonly } from "vue";
-
-import type { OrderItemModel } from "@/models/order.model";
+import type { OrderItemModel, OrderModel } from "@/models/order.model";
 import type { ProductModel } from "@/models/product.model";
 import { useOrderStore } from "@/stores/order";
 
@@ -10,7 +8,7 @@ import ProductSearch from "./ProductSearch.vue";
 import OrderCartItem from "./OrderCartItem.vue";
 
 defineProps<{
-  items: DeepReadonly<OrderItemModel[]>;
+  order: OrderModel;
 }>();
 
 const orderStore = useOrderStore();
@@ -48,7 +46,7 @@ const onDeleteItem = (item: OrderItemModel) => {
 
     <div class="mt-3 space-y-2">
       <OrderCartItem
-        v-for="(item, index) in items"
+        v-for="(item, index) in order.items"
         :key="item.product.code"
         :no="index + 1"
         :item="item"

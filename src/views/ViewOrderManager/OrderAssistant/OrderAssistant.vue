@@ -1,33 +1,29 @@
 <script setup lang="ts">
-import { computed, ref, type DeepReadonly } from "vue";
+import { computed, ref } from "vue";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
-import Tag from "primevue/tag";
 
+import type { OrderModel } from "@/models/order.model";
 import { ORDER_STATUS_SEVERITY } from "@/components-app/tags/tags.config";
 import EPaymentMethod from "@/constants/enums/EPaymentMethod";
-import type { OrderModel } from "@/models/order.model";
-import { formatNumber } from "@/utils";
-import { Options } from "@/utils/Options";
+import { useOrderStore } from "@/stores/order";
 
 import StatusTag from "@/components-app/tags/StatusTag.vue";
-import InputNumber from "@/components-lib/InputNumber/InputNumber.vue";
+import AmountSumary from "./AmountSumary.vue";
 import ControlCustomer from "./ControlCustomer.vue";
+import ControlPayment from "./ControlPayment.vue";
+import OrderDetail from "./OrderDetail.vue";
 
 const props = defineProps<{
-  order: DeepReadonly<OrderModel>;
+  order: OrderModel;
 }>();
 
-const emit = defineEmits<{
-  (e: "updateOrder", data: Partial<OrderModel>): void;
-}>();
+const orderStore = useOrderStore();
 
 const visibleDetail = ref(false);
-const customerPay = ref<number>();
 
 const calculated = computed(() => {
-  const { order } = props;
-  const totalAmountOfItems = order.items.reduce((total, item) => {
+  const totalAmountOfItems = props.order.items.reduce((total, item) => {
     return total + item.quantity * item.product.price;
   }, 0);
 
@@ -37,8 +33,8 @@ const calculated = computed(() => {
   };
 });
 
-const onSelectPaymentMethod = (method: EPaymentMethod) => {
-  emit("updateOrder", { paymentMethod: method });
+const onChangePaymentMethod = (method: EPaymentMethod) => {
+  orderStore.updateOrder({ paymentMethod: method }, orderStore.activeOrderId);
 };
 </script>
 
@@ -56,7 +52,7 @@ const onSelectPaymentMethod = (method: EPaymentMethod) => {
     <div class="px-4 grow relative">
       <StatusTag class="absolute top-3 right-4" :value="order.status" :severityMap="ORDER_STATUS_SEVERITY" />
 
-      <div class="py-3 space-y-1 relative">
+      <div class="py-3 space-y-2 relative">
         <p>
           <span>Handler</span>:
           <span class="font-medium">
@@ -64,57 +60,25 @@ const onSelectPaymentMethod = (method: EPaymentMethod) => {
           </span>
         </p>
 
-        <ControlCustomer :customer-category="order.customerCategory" :member="order.customer" />
+        <ControlCustomer
+          :customer-category="order.customerCategory"
+          :member="order.customer"
+          @change-category="order.customerCategory = $event"
+        />
       </div>
 
-      <div class="py-3 border-t border-surface-200 space-y-1">
-        <div class="flex justify-between">
-          <span>Total amount of goods</span>
-          <span>{{ formatNumber(calculated.totalAmountOfItems) }}</span>
-        </div>
-        <div class="flex justify-between">
-          <span>Total discount</span>
-          <span>{{ formatNumber(0) }}</span>
-        </div>
-        <div class="flex justify-between font-semibold">
-          <span>Total order amount</span>
-          <span>{{ formatNumber(calculated.totalOrderAmount) }}</span>
-        </div>
-      </div>
+      <AmountSumary
+        class="py-3 border-t border-surface-200"
+        :total-amount-of-items="calculated.totalAmountOfItems"
+        :total-order-amount="calculated.totalOrderAmount"
+      />
 
-      <div class="py-3 border-t border-surface-200 space-y-2">
-        <p class="text-base font-semibold">Payment Info</p>
-
-        <div class="flex justify-between">
-          <p>Payment Method</p>
-          <div class="mt-1 flex flex-wrap gap-2">
-            <Tag
-              v-for="option in Options.fromEnum(EPaymentMethod)"
-              class="cursor-pointer"
-              :key="option.key"
-              :value="option.value"
-              :severity="order.paymentMethod?.equals(option.value) ? 'primary' : 'secondary'"
-              @click="onSelectPaymentMethod(option.value)"
-            />
-          </div>
-        </div>
-
-        <div class="flex justify-between">
-          <p class="font-medium" style="padding-top: 5px">Customer pay</p>
-          <InputNumber class="w-28 font-semibold" :max="9_999_999_999" v-model="customerPay" />
-        </div>
-
-        <div class="flex justify-between">
-          <p>Return amount</p>
-          <p>
-            {{
-              customerPay && customerPay > calculated.totalOrderAmount
-                ? formatNumber(customerPay - calculated.totalOrderAmount)
-                : 0
-            }}
-          </p>
-        </div>
-      </div>
+      <ControlPayment
+        class="py-3 border-t border-surface-200"
+        :payment-method="order.paymentMethod"
+        :total-order-amount="calculated.totalOrderAmount"
+        @change-payment-method="onChangePaymentMethod"
+      />
     </div>
 
     <div class="pt-2 pb-4 px-4">
@@ -129,60 +93,7 @@ const onSelectPaymentMethod = (method: EPaymentMethod) => {
       style="width: 28rem; max-width: 28rem"
     >
       <template #container="{ closeCallback }">
-        <div class="px-6 py-4">
-          <div class="pb-2 flex justify-between">
-            <p class="text-xl font-semibold">Order detail</p>
-            <Button
-              class="w-7 h-7 opacity-70 hover:opacity-100"
-              severity="secondary"
-              rounded
-              text
-              @click="closeCallback"
-            >
-              <span class="pi pi-times text-sm"></span>
-            </Button>
-          </div>
-          <div
-            class="h-px"
-            style="
-              background: linear-gradient(
-                to right,
-                var(--p-surface-300),
-                var(--p-surface-300),
-                var(--p-surface-300),
-                transparent
-              );
-            "
-          />
-
-          <div class="py-2 space-y-4">
-            <div class="flex justify-between items-start">
-              <p class="pr-2 font-semibold">#{{ order.code }}</p>
-              <div class="-mt-0.5">
-                <StatusTag :value="order.status" :severityMap="ORDER_STATUS_SEVERITY" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-              <p>
-                Handler:
-                <span class="font-semibold">{{
-                  order.handler.name + (order.handler.id ? ` (${order.handler.id})` : "")
-                }}</span>
-              </p>
-              <p>
-                Created at <span class="font-semibold">{{ order.createdAt }}</span>
-              </p>
-              <p>
-                Customer: <span class="font-semibold">{{ order.customer?.name ?? "--" }}</span>
-              </p>
-            </div>
-
-            <div>
-              <p class="font-semibold">Payment Info</p>
-            </div>
-          </div>
-        </div>
+        <OrderDetail v-if="order" :order="order" @click-close="closeCallback" />
       </template>
     </Dialog>
   </div>

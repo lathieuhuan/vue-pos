@@ -3,9 +3,9 @@ import { computed, nextTick, reactive, ref, watch, type DeepReadonly } from "vue
 import Button from "primevue/button";
 
 import type { OrderItemModel } from "@/models/order.model";
-import { formatNumber } from "@/utils";
-import InputNumber from "@/components-lib/InputNumber/InputNumber.vue";
 import type { InputNumberInputEvent } from "primevue/inputnumber";
+import { formatNumber } from "@/utils";
+import LibInputNumber from "@/components-lib/LibInputNumber/LibInputNumber.vue";
 
 const MAX_ITEM_QUANTITY = 99_999;
 const MIN_ITEM_QUANTITY = 0;
@@ -96,7 +96,7 @@ function onChangeQuantity(value: number, e?: InputNumberInputEvent) {
       <Button class="w-7 h-7" severity="secondary" :disabled="isLoading" @click="onChangeQuantity(quantity - 1)">
         <span class="pi pi-minus text-sm"></span>
       </Button>
-      <InputNumber
+      <LibInputNumber
         class="font-medium"
         :modelValue="quantity"
         :min="MIN_ITEM_QUANTITY"

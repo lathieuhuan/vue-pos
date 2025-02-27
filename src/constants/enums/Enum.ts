@@ -2,20 +2,18 @@ export type EnumMap<TKey extends string = string> = Record<TKey, readonly [strin
 
 export abstract class Enum<TKey extends string = string> {
   constructor(
-    public readonly key: TKey | undefined,
-    public readonly value: string | undefined,
-    public readonly name: string | undefined,
+    public readonly key: TKey,
+    public readonly value: string,
+    public readonly label: string,
   ) {}
 
-  protected static findInstance<TMap extends Record<string, readonly [string, string]>>(
-    value: string | undefined,
+  protected static findInstance<TMap extends EnumMap, TKey extends Extract<keyof TMap, string>>(
+    value: string,
     map: TMap,
-  ): ConstructorParameters<typeof Enum<Extract<keyof TMap, string>>> {
+  ): ConstructorParameters<typeof Enum<TKey>> {
     const record = Object.entries(map).find(([_, item]) => item[0] === value);
-
-    return record
-      ? [record[0] as Extract<keyof TMap, string>, record[1][0], record[1][1]]
-      : [undefined, undefined, undefined];
+    const [key, [foundValue, name]] = record || [value, [value, value]];
+    return [key as TKey, foundValue, name];
   }
 
   /** For Transform of class-transformer */
@@ -28,7 +26,7 @@ export abstract class Enum<TKey extends string = string> {
   }
 
   toString() {
-    return this.name;
+    return this.label;
   }
 
   is(key?: TKey | null) {
