@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch, watchEffect } from "vue";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 
 import type { OrderModel } from "@/models/order.model";
 import { ORDER_STATUS_SEVERITY } from "@/components-app/tags/tags.config";
-import EPaymentMethod from "@/constants/enums/EPaymentMethod";
 import { useOrderStore } from "@/stores/order";
 
 import StatusTag from "@/components-app/tags/StatusTag.vue";
@@ -33,9 +32,16 @@ const calculated = computed(() => {
   };
 });
 
-const onChangePaymentMethod = (method: EPaymentMethod) => {
-  orderStore.updateOrder({ paymentMethod: method }, orderStore.activeOrderId);
-};
+watch(
+  () => props.order?.customer?.name,
+  () => {
+    console.log(props.order?.customer?.name);
+  },
+);
+
+function updateOrder<TKey extends keyof OrderModel>(key: TKey, value: OrderModel[TKey]) {
+  orderStore.updateOrder({ [key]: value }, orderStore.activeOrderId);
+}
 </script>
 
 <template>
@@ -63,7 +69,8 @@ const onChangePaymentMethod = (method: EPaymentMethod) => {
         <ControlCustomer
           :customer-category="order.customerCategory"
           :member="order.customer"
-          @change-category="order.customerCategory = $event"
+          @change-category="updateOrder('customerCategory', $event)"
+          @change-customer="updateOrder('customer', $event)"
         />
       </div>
 
@@ -77,7 +84,7 @@ const onChangePaymentMethod = (method: EPaymentMethod) => {
         class="py-3 border-t border-surface-200"
         :payment-method="order.paymentMethod"
         :total-order-amount="calculated.totalOrderAmount"
-        @change-payment-method="onChangePaymentMethod"
+        @change-payment-method="updateOrder('paymentMethod', $event)"
       />
     </div>
 

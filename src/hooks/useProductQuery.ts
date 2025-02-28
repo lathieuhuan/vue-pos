@@ -16,11 +16,12 @@ export function useProductQuery(params: Reactive<ProductQueryParams>) {
     queryFn: () => {
       return apiService.searchProducts(params, { page: 0, pageSize: 100 });
     },
+    select: (data) => {
+      return data.data.content;
+    },
     retry: 1,
     enabled,
   });
 
-  const products = computed(() => query.data.value?.data.content);
-
-  return { ...query, data: products };
+  return query;
 }

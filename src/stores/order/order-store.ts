@@ -1,6 +1,6 @@
 import { plainToInstance } from "class-transformer";
 import { defineStore } from "pinia";
-import { computed, reactive, ref, type DeepReadonly } from "vue";
+import { computed, reactive, ref, toRaw, type DeepReadonly } from "vue";
 
 import type { ProductModel } from "@/models/product.model";
 
@@ -167,7 +167,11 @@ export const useOrderStore = defineStore("order", () => {
   }
 
   function updateOrder(data: Partial<OrderModel>, orderId: string) {
+    console.log(data);
+
     getOrder(orderId).then((order) => order && Object.assign(order, data));
+
+    console.log(toRaw(getOrder(orderId).getValue()));
   }
 
   return {
