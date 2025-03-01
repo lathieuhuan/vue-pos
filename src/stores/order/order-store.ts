@@ -167,11 +167,7 @@ export const useOrderStore = defineStore("order", () => {
   }
 
   function updateOrder(data: Partial<OrderModel>, orderId: string) {
-    console.log(data);
-
     getOrder(orderId).then((order) => order && Object.assign(order, data));
-
-    console.log(toRaw(getOrder(orderId).getValue()));
   }
 
   return {

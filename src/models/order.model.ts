@@ -8,7 +8,7 @@ import ECustomerCategory from "@/constants/enums/ECustomerCategory";
 import EOrderStatus from "@/constants/enums/EOrderStatus";
 import EPaymentMethod from "@/constants/enums/EPaymentMethod";
 import { formatDate } from "@/utils";
-import type { MemberModel } from "./member.model";
+import { MemberModel } from "./member.model";
 
 export type OrderItemStatus = "IDLE" | "LOADING" | "ERROR";
 
@@ -46,6 +46,7 @@ export class OrderModel {
   @Transform(Enum.transformTo(ECustomerCategory))
   customerCategory: ECustomerCategory;
 
+  // @Type(() => MemberModel)
   customer?: MemberModel;
 
   @Transform(({ value }) => formatDate(new Date(value)))

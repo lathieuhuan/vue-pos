@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { computed, reactive, toRaw } from "vue";
+import { useQueryClient } from "@tanstack/vue-query";
+import { ref, toRaw } from "vue";
 
 import type { MemberModel } from "@/models/member.model";
-import type { MemberQueryParams } from "@/models/request/MemberQueryParams";
+import type { OrderModel } from "@/models/order.model";
 
 import { optionsFromEnum } from "@/components-lib/LibSelect/LibSelect.utils";
 import LibSelect from "@/components-lib/LibSelect/LibSelect.vue";
 import ECustomerCategory from "@/constants/enums/ECustomerCategory";
-import { useMemberQuery } from "@/hooks/useMemberQuery";
+import { useMemberFindByKeyword } from "@/hooks/useMemberFindByKeyword";
 
-const props = defineProps<{
-  customerCategory: ECustomerCategory;
-  customer?: MemberModel;
+defineProps<{
+  order: OrderModel;
 }>();
 
 const emit = defineEmits<{
@@ -21,33 +21,26 @@ const emit = defineEmits<{
 
 const CATEGORY_OPTIONS = optionsFromEnum(ECustomerCategory);
 
-const memberQueryParams = reactive<MemberQueryParams>({});
-let timeoutId: number;
+const searchKeyword = ref("");
+const { data: members } = useMemberFindByKeyword(searchKeyword);
+const queryClient = useQueryClient();
 
-// const { data: members } = useMemberQuery(memberQueryParams, {
-//   transform: (member) => {
-//     return {
-//       label: member.name,
-//       value: member.id,
-//       data: member,
-//     };
-//   },
-// });
-
-const { data: members } = useMemberQuery(memberQueryParams);
-
-// const customerName = computed(() => props.customer?.name);
-
-function onChangeCategory(value: string) {
-  emit("changeCategory", new ECustomerCategory(value));
+function onChangeCategory(value: ECustomerCategory) {
+  emit("changeCategory", value);
 }
+
+let timeoutId: number;
 
 function filterMember(keyword: string) {
   clearTimeout(timeoutId);
 
   timeoutId = setTimeout(() => {
-    memberQueryParams.keyword = keyword.trim();
+    searchKeyword.value = keyword.trim();
   }, 300);
+}
+
+function onCloseMemberSelect() {
+  queryClient.setQueryData([useMemberFindByKeyword.key, searchKeyword.value], []);
 }
 </script>
 
@@ -57,7 +50,7 @@ function filterMember(keyword: string) {
       <span>Customer</span>
       <LibSelect
         class="w-32"
-        :model-value="customerCategory.value"
+        :model-value="order.customerCategory"
         :options="CATEGORY_OPTIONS"
         @update:model-value="onChangeCategory"
       />
@@ -66,13 +59,15 @@ function filterMember(keyword: string) {
       <LibSelect
         filter
         placeholder="Select member"
-        :model-value="customer"
+        :model-value="order.customer"
         :options="members"
         @filter="filterMember"
         @update:model-value="$emit('changeCustomer', toRaw($event))"
+        @hide="onCloseMemberSelect"
       >
         <template #value="{ value, placeholder }">
-          <pre>{{ value ? JSON.stringify(value) : placeholder }}</pre>
+          <span v-if="order.customer" class="text-surface-700">{{ order.customer.name }}</span>
+          <span v-else>{{ value?.name || placeholder }}</span>
         </template>
 
         <template #option="{ option }">

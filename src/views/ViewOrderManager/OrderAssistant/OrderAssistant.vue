@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed, ref } from "vue";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 
@@ -32,13 +32,6 @@ const calculated = computed(() => {
   };
 });
 
-watch(
-  () => props.order?.customer?.name,
-  () => {
-    console.log(props.order?.customer?.name);
-  },
-);
-
 function updateOrder<TKey extends keyof OrderModel>(key: TKey, value: OrderModel[TKey]) {
   orderStore.updateOrder({ [key]: value }, orderStore.activeOrderId);
 }
@@ -67,8 +60,7 @@ function updateOrder<TKey extends keyof OrderModel>(key: TKey, value: OrderModel
         </p>
 
         <ControlCustomer
-          :customer-category="order.customerCategory"
-          :member="order.customer"
+          :order="order"
           @change-category="updateOrder('customerCategory', $event)"
           @change-customer="updateOrder('customer', $event)"
         />
