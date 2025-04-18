@@ -3,7 +3,7 @@ export class MemberModel {
   name: string;
   phoneNumber: string;
 
-  toString = () => {
+  toString() {
     return this.name;
-  };
+  }
 }

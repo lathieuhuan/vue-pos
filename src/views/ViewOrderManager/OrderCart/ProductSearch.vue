@@ -1,43 +1,34 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, ref } from "vue";
 import Image from "primevue/image";
 import Menu, { type MenuMethods } from "primevue/menu";
 
 import type { ProductModel } from "@/models/product.model";
-import type { ProductQueryParams } from "@/models/request/ProductQueryParams";
 
-import { MIN_KEYWORD_LENGTH, useProductQuery } from "@/hooks/useProductQuery";
+import { MIN_KEYWORD_LENGTH, useProductFindByKeyword } from "@/hooks/useProductFindByKeyword";
 import { formatNumber } from "@/utils";
 
-type MenuEndState = "INVALID" | "EMPTY" | "LOADING" | "NONE" | "FETCH_MORE";
+type MenuEndState = "INVALID" | "EMPTY" | "LOADING" | "NONE";
 
 const emit = defineEmits<{
   (e: "selectProduct", product: ProductModel): void;
 }>();
 
-const queryParams = reactive<ProductQueryParams>({});
-const { isLoading, data: products } = useProductQuery(queryParams);
-
-// watch(products, () => {
-//   console.log(products.value);
-// });
+const searchKeyword = ref("");
+const { isLoading, data: products } = useProductFindByKeyword(searchKeyword);
 
 // ===== MENU =====
 
 const menu = ref<MenuMethods>();
 
-const menuEndState = computed<MenuEndState>(() => {
-  const minLength = queryParams.keyword?.length || 0;
-
-  if (minLength < MIN_KEYWORD_LENGTH) {
+const menuFooterState = computed<MenuEndState>(() => {
+  //
+  if (searchKeyword.value.length < MIN_KEYWORD_LENGTH) {
     return "INVALID";
   }
   if (isLoading.value) {
     return "LOADING";
   }
-  // if (canFetchMore) {
-  //   return "FETCH_MORE"
-  // }
   if (!products.value?.length) {
     return "EMPTY";
   }
@@ -55,12 +46,12 @@ const onInputKeyword = (e: Event) => {
   clearTimeout(timeoutId);
 
   timeoutId = setTimeout(() => {
-    queryParams.keyword = value;
+    searchKeyword.value = value;
   }, 150);
 };
 
 const updateKeyword = (value: string) => {
-  queryParams.keyword = value;
+  searchKeyword.value = value;
   if (inputRef.value) inputRef.value.value = value;
 };
 
@@ -91,7 +82,7 @@ const onSelectProduct = (product: ProductModel) => {
       @input="onInputKeyword"
     />
     <button
-      v-if="queryParams.keyword?.length"
+      v-if="searchKeyword.length"
       class="absolute z-10 right-2 w-6 h-6 flex-center rounded-full text-surface-300 hover:text-surface-400 hover:bg-surface-100"
       @click="onClickRemoveKeyword"
     >
@@ -101,7 +92,7 @@ const onSelectProduct = (product: ProductModel) => {
 
   <Menu
     ref="menu"
-    :model="menuEndState !== 'INVALID' ? products : []"
+    :model="menuFooterState !== 'INVALID' ? products : []"
     :popup="true"
     :dt="{
       'list.padding': '0.5rem',
@@ -138,12 +129,14 @@ const onSelectProduct = (product: ProductModel) => {
       </div>
     </template>
 
-    <template #end v-if="menuEndState !== 'NONE'">
-      <div class="px-2 font-semibold">
+    <template #end v-if="menuFooterState !== 'NONE'">
+      <div class="px-2 font-medium">
         <div class="py-4 border-t border-surface-300 flex-center">
-          <span v-if="menuEndState === 'INVALID'">Enter atleast {{ MIN_KEYWORD_LENGTH }} characters to search</span>
-          <span v-else-if="menuEndState === 'EMPTY'">No products found</span>
-          <span v-else-if="menuEndState === 'LOADING'" class="pi pi-spin pi-spinner text-xl opacity-70"></span>
+          <span v-if="menuFooterState === 'INVALID'" class="text-warn-500"
+            >Enter atleast {{ MIN_KEYWORD_LENGTH }} characters to search</span
+          >
+          <span v-else-if="menuFooterState === 'LOADING'" class="pi pi-spin pi-spinner text-xl opacity-70"></span>
+          <span v-else-if="menuFooterState === 'EMPTY'" class="text-warn-500">No products found</span>
         </div>
       </div>
     </template>

@@ -51,7 +51,7 @@ function updateOrder<TKey extends keyof OrderModel>(key: TKey, value: OrderModel
     <div class="px-4 grow relative">
       <StatusTag class="absolute top-3 right-4" :value="order.status" :severityMap="ORDER_STATUS_SEVERITY" />
 
-      <div class="py-3 space-y-2 relative">
+      <div class="py-3 space-y-3 relative">
         <p>
           <span>Handler</span>:
           <span class="font-medium">

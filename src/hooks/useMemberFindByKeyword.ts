@@ -1,4 +1,4 @@
-import { useQuery, type DefaultError, type UseQueryReturnType } from "@tanstack/vue-query";
+import { keepPreviousData, useQuery, type DefaultError, type UseQueryReturnType } from "@tanstack/vue-query";
 import { computed, type Ref } from "vue";
 import { plainToInstance } from "class-transformer";
 
@@ -22,9 +22,9 @@ function useMemberFindByKeyword<TTransformed>(
   options: Option<TTransformed> = {},
 ): UseQueryReturnType<MemberModel[] | TTransformed[], DefaultError> {
   //
-  const { staleTime = 15_000, transform } = options;
+  const { transform, ...restOptions } = options;
   const apiService = new MemberService();
-  const enabled = computed(() => Boolean(keyword.value && keyword.value.length >= MIN_KEYWORD_LENGTH));
+  const enabled = computed(() => keyword.value.length >= MIN_KEYWORD_LENGTH);
 
   const query = useQuery({
     queryKey: ["members", keyword],
@@ -38,8 +38,9 @@ function useMemberFindByKeyword<TTransformed>(
       return transform ? members.map(transform) : members;
     },
     retry: 1,
-    staleTime,
     enabled,
+    placeholderData: keepPreviousData,
+    ...restOptions,
   });
 
   return query;

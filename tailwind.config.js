@@ -7,7 +7,6 @@ export default {
       transparent: "transparent",
       surface: {
         0: "#ffffff",
-        50: "var(--p-surface-50)",
         100: "var(--p-surface-100)",
         200: "var(--p-surface-200)",
         300: "var(--p-surface-300)",
@@ -19,7 +18,6 @@ export default {
         900: "var(--p-surface-900)",
       },
       primary: {
-        50: "var(--p-primary-50)",
         100: "var(--p-primary-100)",
         200: "var(--p-primary-200)",
         300: "var(--p-primary-300)",
@@ -29,6 +27,17 @@ export default {
         700: "var(--p-primary-700)",
         800: "var(--p-primary-800)",
         900: "var(--p-primary-900)",
+      },
+      warn: {
+        100: "var(--p-orange-100)",
+        200: "var(--p-orange-200)",
+        300: "var(--p-orange-300)",
+        400: "var(--p-orange-400)",
+        500: "var(--p-orange-500)",
+        600: "var(--p-orange-600)",
+        700: "var(--p-orange-700)",
+        800: "var(--p-orange-800)",
+        900: "var(--p-orange-900)",
       },
       danger: {
         100: "var(--p-red-100)",

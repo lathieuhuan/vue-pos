@@ -7,7 +7,7 @@
     TValue = TValueKey extends keyof TOption ? TOption[TValueKey] : TOption
   "
 >
-import { ref } from "vue";
+import { ref, type HTMLAttributes } from "vue";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import InputText from "primevue/inputtext";
@@ -25,6 +25,7 @@ export interface AppSelectProps<
   options?: TOption[];
   filter?: boolean;
   placeholder?: string;
+  overlayClass?: HTMLAttributes['class'];
 }
 
 const props = defineProps<AppSelectProps<TOption, TValueKey, TValue>>();
@@ -39,6 +40,7 @@ const emit = defineEmits<{
 defineSlots<{
   option(props: { option: TOption; selected: boolean; index: number }): any;
   value(props: { value?: TValue; placeholder: string }): any;
+  empty(): any;
 }>();
 
 const headerRef = ref<HTMLDivElement>();
@@ -63,10 +65,14 @@ function onShow() {
     <template v-if="filter" #header>
       <div ref="headerRef" class="p-2">
         <IconField>
-          <InputText placeholder="Search" @input="$emit('filter', $event.target.value)" />
+          <InputText class="w-full" placeholder="Search" @input="$emit('filter', $event.target.value)" />
           <InputIcon class="pi pi-search" />
         </IconField>
       </div>
+    </template>
+
+    <template v-if="$slots.empty" #empty="slotProps">
+      <slot name="empty" v-bind="slotProps"></slot>
     </template>
 
     <template v-if="$slots.option" #option="slotProps">
